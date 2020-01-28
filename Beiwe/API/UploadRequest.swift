@@ -19,14 +19,6 @@ struct UploadRequest : Mappable, ApiRequest {
 
     init(fileName: String, filePath: String) {
         self.fileName = fileName;
-        /*
-        do {
-            self.fileData = try NSString(contentsOfFile: filePath, encoding: NSUTF8StringEncoding) as String;
-        } catch {
-            print("Error reading file for upload: \(error)");
-            fileData = "";
-        }
-        */
     }
 
     init?(map: Map) {

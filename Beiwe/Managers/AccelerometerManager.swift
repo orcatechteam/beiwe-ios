@@ -55,7 +55,7 @@ class AccelerometerManager : DataServiceProtocol {
                 data.append(String(accelData.acceleration.y))
                 data.append(String(accelData.acceleration.z))
 
-                self.store?.store(data);
+                _ = self.store?.store(data);
             }
         }
         AppEventManager.sharedInstance.logAppEvent(event: "accel_on", msg: "Accel collection on")
@@ -63,7 +63,7 @@ class AccelerometerManager : DataServiceProtocol {
     func pauseCollecting() {
         log.info("Pausing \(storeType) collection");
         motionManager.stopAccelerometerUpdates();
-        store?.flush();
+        _ = store?.flush();
         AppEventManager.sharedInstance.logAppEvent(event: "accel_off", msg: "Accel collection off")
     }
     func finishCollecting() -> Promise<Void> {

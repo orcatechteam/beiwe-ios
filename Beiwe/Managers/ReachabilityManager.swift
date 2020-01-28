@@ -35,8 +35,8 @@ class ReachabilityManager : DataServiceProtocol {
         data.append(String(Int64(Date().timeIntervalSince1970 * 1000)));
         data.append(reachState);
 
-        self.store?.store(data);
-        self.store?.flush();
+        _ = self.store?.store(data);
+        _ = self.store?.flush();
     }
 
     func initCollecting() -> Bool {
@@ -53,7 +53,7 @@ class ReachabilityManager : DataServiceProtocol {
     func pauseCollecting() {
         log.info("Pausing \(storeType) collection");
         NotificationCenter.default.removeObserver(self, name: ReachabilityChangedNotification, object:nil)
-        store!.flush();
+        _ = store!.flush();
         AppEventManager.sharedInstance.logAppEvent(event: "reachability_off", msg: "Reachability collection off")
     }
     func finishCollecting() -> Promise<Void> {

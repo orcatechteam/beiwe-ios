@@ -30,132 +30,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var currentRootView: String? = "launchScreen";
     var isLoggedIn: Bool = false;
     var timeEnteredBackground: Date?;
-    let pscope = PermissionScope()
+    var pscope: PermissionScope?;
     var canOpenTel = false;
     let debugEnabled  = _isDebugAssertConfiguration();
     let lockEvent = Event<Bool>()
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        Fabric.with([Crashlytics.self])
-
-        // Create a destination for the system console log (via NSLog)
-        let systemLogDestination = AppleSystemLogDestination(owner: log, identifier: "advancedLogger.systemLogDestination")
-
-        // Optionally set some configuration options
-        systemLogDestination.outputLevel = debugEnabled ? .debug : .warning
-        systemLogDestination.showLogIdentifier = false
-        systemLogDestination.showFunctionName = false // true
-        systemLogDestination.showThreadName = true
-        systemLogDestination.showLevel = false // true
-        systemLogDestination.showFileName = false // true
-        systemLogDestination.showLineNumber = false // true
-        systemLogDestination.showDate = true
-        
-        // Add the destination to the logger
-        log.add(destination: systemLogDestination)
-
-        let crashlyticsLogDestination = XCGCrashlyticsLogDestination(owner: log, identifier: "advancedlogger.crashlyticsDestination")
-        crashlyticsLogDestination.outputLevel = .debug
-        crashlyticsLogDestination.showLogIdentifier = false
-        crashlyticsLogDestination.showFunctionName = false // true
-        crashlyticsLogDestination.showThreadName = true
-        crashlyticsLogDestination.showLevel = false // true
-        crashlyticsLogDestination.showFileName = false // true
-        crashlyticsLogDestination.showLineNumber = false // true
-        crashlyticsLogDestination.showDate = true
-
-        // Add the destination to the logger
-        log.add(destination: crashlyticsLogDestination)
-
-
-        log.info("applicationDidFinishLaunching")
-        log.logAppDetails()
+        self.setupLogging();
 
         AppEventManager.sharedInstance.didLaunch(launchOptions: launchOptions);
 
-
-        pscope.addPermission(NotificationsPermission(notificationCategories: nil),
-                             message: "Allows Beiwe to send you survey notifications.")
-        pscope.addPermission(LocationAlwaysPermission(),
-                             message: "Beiwe needs this for the data gathering capabilities of the application.")
-        pscope.headerLabel.text = ""
-        pscope.bodyLabel.text = "Beiwe needs access to your location and notifications.";
-        //pscope.bodyLabel.font = pscope.bodyLabel.font.fontWithSize(10);
-        //pscope.bodyLabel.sizeToFit();
-
-        do {
-            reachability = try Reachability()
-            try reachability!.startNotifier()
-        } catch {
-            log.error("Unable to create or start Reachability")
-        }
-        log.info("AppUUID: \(PersistentAppUUID.sharedInstance.uuid)");
-        let uiDevice = UIDevice.current;
-        modelVersionId = UIDevice.current.model + "/" + UIDevice.current.systemVersion;
-        log.info("name: \(uiDevice.name)");
-        log.info("systemName: \(uiDevice.systemName)");
-        log.info("systemVersion: \(uiDevice.systemVersion)");
-        log.info("model: \(uiDevice.model)");
-        log.info("platform: \(platform())");
-
-        canOpenTel = UIApplication.shared.canOpenURL(URL(string: "tel:6175551212")!);
-
-
-        /* Colors */
-
-        //let rkAppearance = UIView.my_appearanceWhenContained(in: ORKTaskViewController.self)
-        let rkAppearance = UIView.appearance(whenContainedInInstancesOf: [ORKTaskViewController.self])
-        rkAppearance.tintColor = AppColors.tintColor;
-        //rkAppearance.backgroundColor = UIColor.clearColor() // AppColors.gradientBottom;
-
-        /*
-        let stepAppearance = UIView.my_appearanceWhenContainedIn(ORKStepViewController.self)
-        stepAppearance.tintColor = AppColors.tintColor;
-        stepAppearance.backgroundColor = UIColor.clearColor() // AppColors.gradientBottom;
-        */
-
-        /*
-        UIView.appearanceWhenContainedInInstancesOfClasses([ORKTaskViewController.self]).tintColor = AppColors.tintColor
-        */
-
-        //UIView.appearance().tintColor = AppColors.tintColor;
+        self.setupPermissions();
+        self.setupReachability();
+        self.setModelVersionID();
+        self.checkTelephony();
+        //self.setupColors();
 
         storyboard = UIStoryboard(name: "Main", bundle: Bundle.main);
 
-        self.window = UIWindow(frame: UIScreen.main.bounds);
-        self.window?.rootViewController = UIStoryboard(name: "LaunchScreen", bundle: Bundle.main).instantiateViewController(withIdentifier: "launchScreen");
-        /* Gradient background so we can use "clear" RK views */
-        /*
-        let backView = GradientView(frame: UIScreen.mainScreen().bounds)
-        backView.topColor = AppColors.gradientBottom
-        backView.bottomColor = UIColor.whiteColor()
-        self.window?.insertSubview(backView, atIndex: 0)
-        */
-        
-
-        self.window!.makeKeyAndVisible()
+        self.setupWindow();
 
         Recline.shared.open().then { _ -> Promise<Bool> in
             print("Database opened");
             return StudyManager.sharedInstance.loadDefaultStudy();
-            }.then { _ -> Void in
-                self.transitionToCurrentAppState();
-            }.catch { err -> Void in
-                print("Database open failed.");
+        }.done { _ -> Void in
+            self.transitionToCurrentAppState();
+        }.catch { err -> Void in
+            print("Database open failed.");
         }
-        //launchScreen
-        /*
-            //self.window!.backgroundColor = UIColor.whiteColor()
-
-            self.window?.rootViewController = OnboardViewController();
-
-
-
-        }
-        */
-
 
         return true
     }
@@ -185,10 +88,90 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 snapshot.removeFromSuperview();
         });
     }
+    
+    func setupColors(){
+        UIView.appearance(whenContainedInInstancesOf: [ORKTaskViewController.self]).tintColor = AppColors.tintColor;
+    }
+    
+    func setupWindow(){
+        self.window = UIWindow(frame: UIScreen.main.bounds);
+        if let win = self.window {
+            win.rootViewController = UIStoryboard(name: "LaunchScreen", bundle: Bundle.main).instantiateViewController(withIdentifier: "launchScreen");
+            win.makeKeyAndVisible()
+        }
+    }
+    
+    func setupPermissions(){
+        self.pscope = PermissionScope(backgroundTapCancels: true)
+        if let scope = pscope {
+            scope.addPermission(NotificationsPermission(notificationCategories: nil), message: "Allows Beiwe to send you survey notifications.")
+            scope.addPermission(LocationAlwaysPermission(), message: "Beiwe needs this for the data gathering capabilities of the application.")
+            scope.headerLabel.text = ""
+            scope.bodyLabel.text = "Beiwe needs access to your location and notifications.";
+        }
+    }
+    
+    func setupLogging(){
+        // Override point for customization after application launch.
+        Fabric.with([Crashlytics.self])
+        
+        // Create a destination for the system console log (via NSLog)
+        let systemLogDestination = AppleSystemLogDestination(owner: log, identifier: "advancedLogger.systemLogDestination")
+
+        // Optionally set some configuration options
+        systemLogDestination.outputLevel = debugEnabled ? .debug : .warning
+        systemLogDestination.showLogIdentifier = false
+        systemLogDestination.showFunctionName = false // true
+        systemLogDestination.showThreadName = true
+        systemLogDestination.showLevel = false // true
+        systemLogDestination.showFileName = false // true
+        systemLogDestination.showLineNumber = false // true
+        systemLogDestination.showDate = true
+        
+        // Add the destination to the logger
+        log.add(destination: systemLogDestination)
+
+        let crashlyticsLogDestination = XCGCrashlyticsLogDestination(owner: log, identifier: "advancedlogger.crashlyticsDestination")
+        crashlyticsLogDestination.outputLevel = .debug
+        crashlyticsLogDestination.showLogIdentifier = false
+        crashlyticsLogDestination.showFunctionName = false // true
+        crashlyticsLogDestination.showThreadName = true
+        crashlyticsLogDestination.showLevel = false // true
+        crashlyticsLogDestination.showFileName = false // true
+        crashlyticsLogDestination.showLineNumber = false // true
+        crashlyticsLogDestination.showDate = true
+
+        // Add the destination to the logger
+        log.add(destination: crashlyticsLogDestination)
+        
+        log.logAppDetails()
+    }
+    
+    func setupReachability(){
+        do {
+            reachability = Reachability()
+            try reachability!.startNotifier()
+        } catch {
+            log.error("Unable to create or start Reachability")
+        }
+    }
+    
+    func setModelVersionID(){
+        let uiDevice = UIDevice.current;
+        modelVersionId = UIDevice.current.model + "/" + UIDevice.current.systemVersion;
+        log.info("AppUUID: \(PersistentAppUUID.sharedInstance.uuid)");
+        log.info("Name: \(uiDevice.name)");
+        log.info("SystemName: \(uiDevice.systemName)");
+        log.info("SystemVersion: \(uiDevice.systemVersion)");
+        log.info("Model: \(uiDevice.model)");
+        log.info("Platform: \(platform())");
+    }
+    
+    func checkTelephony(){
+        canOpenTel = UIApplication.shared.canOpenURL(URL(string: "tel:6175551212")!);
+    }
 
     func transitionToCurrentAppState() {
-
-
         if let currentStudy = StudyManager.sharedInstance.currentStudy {
             if (currentStudy.participantConsented) {
                 StudyManager.sharedInstance.startStudyDataServices();
@@ -198,15 +181,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 changeRootViewControllerWithIdentifier("login");
             } else {
                 // We are logged in, so if we've completed onboarding load main interface
-                // Otherwise continue onboarding.
+                // Otherwise continue the onboarding.
                 if (currentStudy.participantConsented) {
                     changeRootViewControllerWithIdentifier("mainView");
                 } else {
                     changeRootViewController(ConsentManager().consentViewController);
                 }
-
             }
-
         } else {
             // If there is no study loaded, then it's obvious.  We need the onboarding flow
             // from the beginning.
@@ -234,17 +215,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func checkPasswordAndLogin(_ password: String) -> Bool {
-        if let storedPassword = PersistentPasswordManager.sharedInstance.passwordForStudy(), storedPassword.characters.count > 0 {
+        if let storedPassword = PersistentPasswordManager.sharedInstance.passwordForStudy(), storedPassword.count > 0 {
             if (password == storedPassword) {
                 ApiManager.sharedInstance.password = storedPassword;
                 isLoggedIn = true;
                 return true;
             }
-
         }
-
         return false;
-
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
@@ -277,10 +255,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let dispatchGroup = DispatchGroup();
 
         dispatchGroup.enter()
-        StudyManager.sharedInstance.stop().then(on: DispatchQueue.global(qos: .default)) { _ in
+        StudyManager.sharedInstance.stop().map(on: DispatchQueue.global(qos: .default)) { _ in
             dispatchGroup.leave()
-            }.catch(on: DispatchQueue.global(qos: .default)) {_ in 
-                dispatchGroup.leave()
+        }.catch(on: DispatchQueue.global(qos: .default)) {_ in
+            dispatchGroup.leave()
         }
 
         dispatchGroup.wait();
@@ -293,8 +271,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func displayCurrentMainView() {
-        //
-
         var view: String;
         if let _ = StudyManager.sharedInstance.currentStudy {
             view = "initialStudyView";
@@ -303,13 +279,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         self.window = UIWindow(frame: UIScreen.main.bounds)
 
-        self.window?.rootViewController = storyboard!.instantiateViewController(withIdentifier: view) as UIViewController!;
+        self.window?.rootViewController = storyboard!.instantiateViewController(withIdentifier: view) as UIViewController?;
 
         self.window!.makeKeyAndVisible()
-        
     }
 
-    func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+    func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         log.info("applicationWillFinishLaunchingWithOptions")
         return true;
 
@@ -327,6 +302,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         AppEventManager.sharedInstance.logAppEvent(event: "locked", msg: "Phone/keystore locked")
         
     }
+    
     /* Crashlytics functions -- future */
 
     func setDebuggingUser(_ username: String) {
@@ -340,8 +316,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func crash() {
         Crashlytics.sharedInstance().crash()
     }
-
-
-
 }
 

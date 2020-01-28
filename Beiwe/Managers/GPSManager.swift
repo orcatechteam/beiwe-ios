@@ -81,19 +81,20 @@ class GPSManager : NSObject, CLLocationManagerDelegate, DataServiceProtocol {
     }
 
     func stopAndClear() -> Promise<Void> {
+        let queue = DispatchQueue.global(qos: .default)
+        
         locationManager.stopUpdatingLocation();
         areServicesRunning = false
         clearPollTimer();
         var promise = Promise();
         for dataStatus in dataCollectionServices {
-            promise = promise.then(on: DispatchQueue.global(qos: .default)) {
-                dataStatus.handler.finishCollecting().then(on: DispatchQueue.global(qos: .default)) {
+            promise = promise.then(on: queue) { _ -> Promise<Void> in
+                dataStatus.handler.finishCollecting().done(on: queue) { _ in
                     print("Returned from finishCollecting")
-                    return Promise()
-
-                    }.catch(on: DispatchQueue.global(qos: .default)) {_ in
-                        print("err from finish collecting")
+                }.catch(on: queue) { _ in
+                    print("err from finish collecting")
                 }
+                return Promise()
             }
         }
 
@@ -123,7 +124,7 @@ class GPSManager : NSObject, CLLocationManagerDelegate, DataServiceProtocol {
                             dataStatus.nextToggleTime = Date(timeIntervalSince1970: currentDate + dataStatus.onDurationSeconds);
                         }
                     }
-                    serviceDate = dataStatus.nextToggleTime?.timeIntervalSince1970 ?? DBL_MAX;
+                    serviceDate = dataStatus.nextToggleTime?.timeIntervalSince1970 ?? Double.greatestFiniteMagnitude;
                 }
                 nextServiceDate = min(nextServiceDate, serviceDate);
             }
@@ -211,7 +212,7 @@ class GPSManager : NSObject, CLLocationManagerDelegate, DataServiceProtocol {
             data.append(String(lng))
             data.append(String(loc.altitude))
             data.append(String(loc.horizontalAccuracy))
-            gpsStore?.store(data);
+            _ = gpsStore?.store(data);
         }
     }
 
@@ -250,7 +251,7 @@ class GPSManager : NSObject, CLLocationManagerDelegate, DataServiceProtocol {
         isCollectingGps = false;
         locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
         locationManager.distanceFilter = 99999;
-        gpsStore?.flush();
+        _ = gpsStore?.flush();
     }
     func finishCollecting() -> Promise<Void> {
         pauseCollecting();

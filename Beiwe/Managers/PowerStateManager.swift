@@ -31,12 +31,14 @@ class PowerStateManager : DataServiceProtocol {
             state = "Unplugged";
         case .unknown:
             state = "PowerUnknown";
+        @unknown default:
+            state = "PowerUnknown";
         }
         data.append(state);
         data.append(String(UIDevice.current.batteryLevel));
 
-        self.store?.store(data);
-        self.store?.flush();
+        _ = self.store?.store(data);
+        _ = self.store?.flush();
     }
 
     func didLockUnlock(_ isLocked: Bool) {
@@ -47,9 +49,8 @@ class PowerStateManager : DataServiceProtocol {
         data.append(state);
         data.append(String(UIDevice.current.batteryLevel));
 
-        self.store?.store(data);
-        self.store?.flush();
-
+        _ = self.store?.store(data);
+        _ = self.store?.flush();
     }
 
     func initCollecting() -> Bool {
@@ -63,17 +64,17 @@ class PowerStateManager : DataServiceProtocol {
         listeners += AppDelegate.sharedInstance().lockEvent.on { [weak self] locked in
             self?.didLockUnlock(locked);
         }
-        NotificationCenter.default.addObserver(self, selector: #selector(self.batteryStateDidChange), name: NSNotification.Name.UIDeviceBatteryStateDidChange, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(self.batteryStateDidChange), name: NSNotification.Name.UIDeviceBatteryLevelDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.batteryStateDidChange), name: UIDevice.batteryStateDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.batteryStateDidChange), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
         AppEventManager.sharedInstance.logAppEvent(event: "powerstate_on", msg: "PowerState collection on")
 
     }
     func pauseCollecting() {
         log.info("Pausing \(storeType) collection");
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIDeviceBatteryStateDidChange, object:nil)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIDeviceBatteryLevelDidChange, object:nil)
+        NotificationCenter.default.removeObserver(self, name: UIDevice.batteryStateDidChangeNotification, object:nil)
+        NotificationCenter.default.removeObserver(self, name: UIDevice.batteryLevelDidChangeNotification, object:nil)
         listeners = [ ];
-        store!.flush();
+        _ = store!.flush();
         AppEventManager.sharedInstance.logAppEvent(event: "powerstate_off", msg: "PowerState collection off")
     }
     func finishCollecting() -> Promise<Void> {

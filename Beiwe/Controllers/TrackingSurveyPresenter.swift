@@ -298,9 +298,9 @@ class TrackingSurveyPresenter : NSObject, ORKTaskViewControllerDelegate {
             data.append(question.prompt ?? "");
             data.append(optionsString);
             data.append(answersString);
-            dataFile.store(data);
+            _ = dataFile.store(data);
         }
-        dataFile.closeAndReset();
+        _ = dataFile.closeAndReset();
         return !dataFile.hasError;
         
     }
@@ -319,7 +319,7 @@ class TrackingSurveyPresenter : NSObject, ORKTaskViewControllerDelegate {
         data.append("");
         data.append(event);
         print("TimingsEvent: \(data.joined(separator: ","))")
-        timingsStore?.store(data);
+        _ = timingsStore?.store(data);
     }
 
     func addTimingsEvent(_ event: String, question: GenericSurveyQuestion?, forcedValue: String? = nil) {
@@ -340,8 +340,7 @@ class TrackingSurveyPresenter : NSObject, ORKTaskViewControllerDelegate {
         }
         data.append(event);
         print("TimingsEvent: \(data.joined(separator: ","))")
-        timingsStore?.store(data);
-
+        _ = timingsStore?.store(data);
     }
 
     func possiblyAddUnpresent() {
@@ -362,12 +361,10 @@ class TrackingSurveyPresenter : NSObject, ORKTaskViewControllerDelegate {
     }
 
     func displaySurveyQuestion(_ identifier: String) -> Bool {
-        guard let question = questionIdToQuestion[identifier], let survey = survey, let displayIf = question.displayIf else {
+        guard let question = questionIdToQuestion[identifier], let _ = survey, let _ = question.displayIf else {
             return true;
         }
-
         return false;
-
     }
 
     /* ORK Delegates */
@@ -376,10 +373,10 @@ class TrackingSurveyPresenter : NSObject, ORKTaskViewControllerDelegate {
         if (!isComplete) {
             activeSurvey?.rkAnswers = taskViewController.restorationData;
             if let study = StudyManager.sharedInstance.currentStudy {
-                Recline.shared.save(study).then {_ in
+                Recline.shared.save(study).done { _ in
                     log.info("Tracking survey Saved.");
-                    }.catch {_ in
-                        log.error("Error saving updated answers.");
+                }.catch {_ in
+                    log.error("Error saving updated answers.");
                 }
             }
         }
@@ -404,7 +401,7 @@ class TrackingSurveyPresenter : NSObject, ORKTaskViewControllerDelegate {
 
     func taskViewController(_ taskViewController: ORKTaskViewController, learnMoreForStep stepViewController: ORKStepViewController) {
         // Present modal...
-        let refreshAlert = UIAlertController(title: "Learning more!", message: "You're smart now", preferredStyle: UIAlertControllerStyle.alert)
+        let refreshAlert = UIAlertController(title: "Learning more!", message: "You're smart now", preferredStyle: UIAlertController.Style.alert)
 
         refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction!) in
         }))
@@ -449,7 +446,7 @@ class TrackingSurveyPresenter : NSObject, ORKTaskViewControllerDelegate {
                 activeSurvey?.rkAnswers = taskViewController.restorationData;
                 activeSurvey?.isComplete = true;
                 isComplete = true;
-                StudyManager.sharedInstance.updateActiveSurveys(true);
+                _ = StudyManager.sharedInstance.updateActiveSurveys(true);
                 stepViewController.cancelButtonItem = nil;
                 stepViewController.backButtonItem = nil;
             case "confirm":
@@ -487,6 +484,6 @@ class TrackingSurveyPresenter : NSObject, ORKTaskViewControllerDelegate {
     }
 
     deinit {
-        DataStorageManager.sharedInstance.closeStore(timingsName)
+        _ = DataStorageManager.sharedInstance.closeStore(timingsName)
     }
 }

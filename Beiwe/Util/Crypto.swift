@@ -7,20 +7,27 @@
 //
 
 import Foundation
+import CommonCrypto;
 import IDZSwiftCommonCrypto
 
 class Crypto {
     static let sharedInstance = Crypto();
     fileprivate static let defaultRSAPadding: SecPadding = .PKCS1
 
-
-    func sha256Base64URL(_ str: String) -> String {
+    func sha256Base64(_ str: String) -> String {
         let sha256: Digest = Digest(algorithm: .sha256);
-        sha256.update(string: str);
-        let digest = sha256.final();
-        let data = Data(bytes: digest)
-        let base64Str = data.base64EncodedString();
-        return base64ToBase64URL(base64Str);
+        _ = sha256.update(string: str);
+        let digest: [UInt8] = sha256.final();
+        let data = Data(bytes: digest, count: digest.count)
+        return data.base64EncodedString();
+    }
+    
+    func sha256Base64URL(_ str: String) -> String {
+        return base64ToBase64URL(sha256Base64(str));
+    }
+    
+    func base64URL(_ str: String) -> String {
+        return base64ToBase64URL(str.data(using: .utf8)!.base64EncodedString())
     }
 
     func base64ToBase64URL(_ base64str: String) -> String {
@@ -53,7 +60,7 @@ class Crypto {
     func rsaEncryptString(_ str: String, publicKey: SecKey, padding: SecPadding = defaultRSAPadding) throws -> String {
         let blockSize = SecKeyGetBlockSize(publicKey)
         let plainTextData = [UInt8](str.utf8)
-        let plainTextDataLength = Int(str.characters.count)
+        let plainTextDataLength = Int(str.count)
         var encryptedData = [UInt8](repeating: 0, count: Int(blockSize))
         var encryptedDataLength = blockSize
 
@@ -76,6 +83,42 @@ class Crypto {
             return Data(cipherText);
         }
         return nil;
+    }
+    
+    func md5(url: URL) -> String? {
+
+        let bufferSize = 1024 * 1024
+
+        do {
+            let file = try FileHandle(forReadingFrom: url)
+            defer {
+                file.closeFile()
+            }
+
+            var context = CC_MD5_CTX()
+            CC_MD5_Init(&context)
+            
+            while autoreleasepool(invoking: {
+                let data = file.readData(ofLength: bufferSize)
+                if data.count > 0 {
+                    data.withUnsafeBytes {
+                        _ = CC_MD5_Update(&context, $0.baseAddress, numericCast(data.count))
+                    }
+                    return true // Continue
+                }
+                return false // End of file
+            }) { }
+
+            var digest: [UInt8] = Array(repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
+            _ = CC_MD5_Final(&digest, &context)
+
+            return Data(digest).map { String(format: "%02hhx", $0) }.joined()
+            //return String(decoding: Data(digest), as: UTF8.self)
+
+        } catch let error {
+            print("unabled to calculate md5 \(error)")
+            return nil
+        }
     }
 
 }

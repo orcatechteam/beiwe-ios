@@ -22,10 +22,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
 
         var clinicianText: String;
         clinicianText = StudyManager.sharedInstance.currentStudy?.studySettings?.callClinicianText ?? "Contact Clinician"
-        callClinicianButton.setTitle(clinicianText, for: UIControlState())
-        callClinicianButton.setTitle(clinicianText, for: UIControlState.highlighted)
+        callClinicianButton.setTitle(clinicianText, for: UIControl.State())
+        callClinicianButton.setTitle(clinicianText, for: UIControl.State.highlighted)
         if #available(iOS 9.0, *) {
-            callClinicianButton.setTitle(clinicianText, for: UIControlState.focused)
+            callClinicianButton.setTitle(clinicianText, for: UIControl.State.focused)
         }
         // Hide call button if it's disabled in the study settings
         if !(StudyManager.sharedInstance.currentStudy?.studySettings?.callClinicianButtonEnabled)! {
@@ -50,7 +50,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         PKHUD.sharedHUD.dimsBackground = true;
         PKHUD.sharedHUD.userInteractionOnUnderlyingViewsEnabled = false;
 
-        if let password = password.text, password.characters.count > 0 {
+        if let password = password.text, password.count > 0 {
             if (AppDelegate.sharedInstance().checkPasswordAndLogin(password)) {
                 HUD.flash(.success, delay: 0.5);
                 AppDelegate.sharedInstance().transitionToCurrentAppState();

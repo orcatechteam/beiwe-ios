@@ -54,7 +54,7 @@ class Recline {
     }
 
     func _open(_ dbName: String = "default") -> Promise<Bool> {
-        return Promise { resolve, reject in
+        return Promise { seal in
             self.db = try manager.databaseNamed(dbName);
             self.typesView = self.db!.viewNamed("reclineType")
             typesView!.setMapBlock({ (doc, emit) in
@@ -64,13 +64,12 @@ class Recline {
                     }
                 }
             }, version: "5")
-
-            return resolve(true);
+            seal.fulfill(true)
         }
     }
 
     func open(_ dbName: String = "default") -> Promise<Bool> {
-        return Promise().then(on: Recline.queue) {
+        return Promise().then(on: Recline.queue) { _ -> Promise<Bool> in
             if (self.manager == nil) {
                 let cbloptions = CBLManagerOptions(readOnly: false, fileProtection: NSData.WritingOptions.noFileProtection)
                 let poptions=UnsafeMutablePointer<CBLManagerOptions>.allocate(capacity: 1)
@@ -78,15 +77,14 @@ class Recline {
                 try self.manager = CBLManager(directory: CBLManager.defaultDirectory(), options: poptions)
                 self.manager.dispatchQueue = Recline.queue
             }
-
             return self._open(dbName);
         }
     }
 
     func _save<T: ReclineObject>(_ obj: T) -> Promise<T> {
-        return Promise { resolve, reject in
+        return Promise { seal in
             guard let db = db else {
-                return reject(ReclineErrors.databaseNotOpen);
+                return seal.reject(ReclineErrors.databaseNotOpen);
             }
 
             var doc: CBLDocument?
@@ -103,7 +101,7 @@ class Recline {
             newProps["_rev"] = doc?.properties?["_rev"]
             try doc?.putProperties(newProps)
 
-            return resolve(obj);
+            return seal.fulfill(obj);
 
         }
 
@@ -117,18 +115,18 @@ class Recline {
 
 
     func _load<T: ReclineObject>(_ docId: String) -> Promise<T?> {
-        return Promise { resolve, reject in
+        return Promise { seal in
             guard let db = db else {
-                return reject(ReclineErrors.databaseNotOpen);
+                return seal.reject(ReclineErrors.databaseNotOpen);
             }
             let doc: CBLDocument? = db.document(withID: docId);
             if let doc = doc {
                 if let newObj = Mapper<T>().map(JSONObject: doc.properties)  {
                     newObj._id = doc.properties?["_id"] as? String
-                    return resolve(newObj);
+                    return seal.fulfill(newObj);
                 }
             }
-            return resolve(nil);
+            return seal.fulfill(nil);
         }
     }
 
@@ -140,9 +138,9 @@ class Recline {
 
 
     func _queryAll<T: ReclineObject>() -> Promise<[T]> {
-        return Promise { resolve, reject in
+        return Promise { seal in
             guard let typesView = typesView else {
-                return reject(ReclineErrors.databaseNotOpen);
+                return seal.reject(ReclineErrors.databaseNotOpen);
             }
 
             let query = typesView.createQuery();
@@ -153,15 +151,12 @@ class Recline {
                     promises.append(load(docId))
                 }
             }
-            when(fulfilled: promises).then(on: Recline.queue)  { results -> Void in
-                //resolve([]);
-                resolve(results.filter { $0 != nil}.map { $0! }  );
-                }.catch { err in
-                    reject(err)
-                }
-            
+            when(fulfilled: promises).done(on: Recline.queue) { results -> Void in
+                seal.fulfill(results.compactMap { $0 });
+            }.catch { err in
+                seal.reject(err)
+            }
         }
-
     }
 
     func queryAll<T: ReclineObject>() -> Promise<[T]> {
@@ -172,13 +167,13 @@ class Recline {
 
 
     func _purge<T: ReclineObject>(_ obj: T) -> Promise<Bool> {
-        return Promise { resolve, reject in
+        return Promise { seal in
 
             if let _id = obj._id {
                 try db?.document(withID: _id)?.purgeDocument()
-                return resolve(true);
+                return seal.fulfill(true);
             } else {
-                return resolve(true);
+                return seal.fulfill(true);
             }
 
         }
@@ -192,9 +187,9 @@ class Recline {
     }
 
     func compact() -> Promise<Void> {
-        return Promise<Void>().then(on: Recline.queue) { _ -> Void in
-            try self.db?.compact()
-            }
+        return Promise<Void>().map(on: Recline.queue) { _ in
+            try? self.db?.compact()
+        }
     }
 
 }

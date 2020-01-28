@@ -32,11 +32,11 @@ class BWButton : UIButton {
 
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        self.setTitleColor(UIColor.white, for: UIControlState())
-        self.setTitleColor(UIColor.white, for: UIControlState.selected)
-        self.setTitleColor(UIColor.white, for: UIControlState.highlighted)
+        self.setTitleColor(UIColor.white, for: UIControl.State())
+        self.setTitleColor(UIColor.white, for: UIControl.State.selected)
+        self.setTitleColor(UIColor.white, for: UIControl.State.highlighted)
 
-        self.setTitleColor(UIColor.darkGray, for: UIControlState.disabled)
+        self.setTitleColor(UIColor.darkGray, for: UIControl.State.disabled)
         self.layer.borderWidth = 1
         self.layer.cornerRadius = 5
         self.layer.masksToBounds = true

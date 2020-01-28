@@ -1,4 +1,4 @@
-platform :ios, '9.1'
+platform :ios, '9.3'
 
 target 'Beiwe' do
   use_frameworks!
@@ -7,7 +7,7 @@ target 'Beiwe' do
   pod "PromiseKit"
   pod 'Alamofire', '~> 4.5'
   pod 'ObjectMapper', :git => 'https://github.com/Hearst-DD/ObjectMapper.git', :branch => 'master'
-  pod 'Eureka'
+  pod 'Eureka', '4.1.1'
   pod 'SwiftValidator', :git => 'https://github.com/jpotts18/SwiftValidator.git', :branch => 'master'
   pod "PKHUD", :git => 'https://github.com/pkluz/PKHUD.git', :branch => 'swift4'
   pod 'IDZSwiftCommonCrypto', '~> 0.9'
@@ -17,7 +17,7 @@ target 'Beiwe' do
   pod 'EmitterKit', '~> 5.1'
   pod 'PermissionScope', :git => 'https://github.com/RocketFarm/PermissionScope.git', :branch => 'master'
   pod 'Hakuba', :git => 'https://github.com/eskizyen/Hakuba.git', :branch => 'Swift3'
-  pod 'XLActionController'
+  pod 'XLActionController', '~> 5.0.1'
   pod 'XCGLogger', '~> 7.0.0'
 
 end

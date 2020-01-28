@@ -53,7 +53,7 @@ class MagnetometerManager : DataServiceProtocol {
                 data.append(String(magData.magneticField.y))
                 data.append(String(magData.magneticField.z))
 
-                self.store?.store(data);
+                _ = self.store?.store(data);
             }
         }
         AppEventManager.sharedInstance.logAppEvent(event: "magnetometer_on", msg: "Magnetometer collection on")
@@ -62,7 +62,7 @@ class MagnetometerManager : DataServiceProtocol {
     func pauseCollecting() {
         log.info("Pausing \(storeType) collection");
         motionManager.stopMagnetometerUpdates()
-        store?.flush();
+        _ = store?.flush();
         AppEventManager.sharedInstance.logAppEvent(event: "magnetometer_off", msg: "Magnetometer collection off")
     }
     func finishCollecting() -> Promise<Void> {

@@ -31,11 +31,11 @@ class ChangePasswordViewController: FormViewController {
         // Do any additional setup after loading the view.
 
         form +++ Section(){ section in
-            if (isForgotPassword) {
+            if (self.isForgotPassword) {
                 var header = HeaderFooterView<ForgotPasswordHeaderView>(.nibFile(name: "ForgotPasswordHeaderView", bundle: nil))
                 header.onSetupView = { headerView, _ in
                     headerView.patientId.text = StudyManager.sharedInstance.currentStudy?.patientId ?? ""
-                    headerView.callButton.addTarget(self, action: #selector(ChangePasswordViewController.callAssistant(_:)), for: UIControlEvents.touchUpInside)
+                    headerView.callButton.addTarget(self, action: #selector(ChangePasswordViewController.callAssistant(_:)), for: UIControl.Event.touchUpInside)
                     // Hide call button if it's disabled in the study settings
                     if !(StudyManager.sharedInstance.currentStudy?.studySettings?.callResearchAssistantButtonEnabled)! {
                         headerView.descriptionLabel.text = "Please contact your study's staff and provide them with your Patient ID so they can give you a temporary password."
@@ -49,7 +49,7 @@ class ChangePasswordViewController: FormViewController {
             }
             <<< SVPasswordRow("currentPassword") {
                 $0.title = isForgotPassword ? "Temporary Password:" : "Current Password:"
-                let placeholder: String = String($0.title!.lowercased().characters.dropLast())
+                let placeholder: String = String($0.title!.lowercased().dropLast())
                 $0.placeholder = placeholder
                 $0.rules = [RequiredRule()]
                 $0.autoValidation = autoValidation
@@ -80,8 +80,7 @@ class ChangePasswordViewController: FormViewController {
                         let currentPassword: String? = formValues["currentPassword"] as! String?;
                         if let newPassword = newPassword, let currentPassword = currentPassword {
                             let changePasswordRequest = ChangePasswordRequest(newPassword: newPassword);
-                            ApiManager.sharedInstance.makePostRequest(changePasswordRequest, password: currentPassword).then {
-                                (body, code) -> Void in
+                            ApiManager.sharedInstance.makePostRequest(changePasswordRequest, password: currentPassword).done {(body, code) -> Void in
                                 log.info("Password changed");
                                 PersistentPasswordManager.sharedInstance.storePassword(newPassword);
                                 HUD.flash(.success, delay: 1);

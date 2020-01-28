@@ -29,11 +29,7 @@ class MainViewController: UIViewController {
         
         self.navigationController?.presentTransparentNavigationBar();
         let leftImage : UIImage? = UIImage(named:"ic-user")!.withRenderingMode(.alwaysOriginal);
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: leftImage, style: UIBarButtonItemStyle.plain, target: self, action: #selector(userButton))
-        /*
-        let rightImage : UIImage? = UIImage(named:"ic-info")!.imageWithRenderingMode(.AlwaysOriginal);
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: rightImage, style: UIBarButtonItemStyle.Plain, target: self, action: #selector(infoButton))
-        */
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: leftImage, style: UIBarButtonItem.Style.plain, target: self, action: #selector(userButton))
         self.navigationController?.navigationBar.tintColor = UIColor.white
         self.navigationItem.rightBarButtonItem = nil;
 
@@ -42,15 +38,13 @@ class MainViewController: UIViewController {
         hakuba = Hakuba(tableView: surveyTableView);
         surveyTableView.backgroundView = nil;
         surveyTableView.backgroundColor = UIColor.clear;
-        /*hakuba
-            .registerCell(SurveyCell) */
 
         var clinicianText: String;
         clinicianText = StudyManager.sharedInstance.currentStudy?.studySettings?.callClinicianText ?? "Contact Clinician"
-        callClinicianButton.setTitle(clinicianText, for: UIControlState())
-        callClinicianButton.setTitle(clinicianText, for: UIControlState.highlighted)
+        callClinicianButton.setTitle(clinicianText, for: UIControl.State())
+        callClinicianButton.setTitle(clinicianText, for: UIControl.State.highlighted)
         if #available(iOS 9.0, *) {
-            callClinicianButton.setTitle(clinicianText, for: UIControlState.focused)
+            callClinicianButton.setTitle(clinicianText, for: UIControl.State.focused)
         }
         
         // Hide call button if it's disabled in the study settings
@@ -198,7 +192,7 @@ class MainViewController: UIViewController {
     }
     
     @IBAction func Upload(_ sender: AnyObject) {
-        StudyManager.sharedInstance.upload(false);
+        _ = StudyManager.sharedInstance.upload(false);
     }
 
 
@@ -208,7 +202,7 @@ class MainViewController: UIViewController {
     }
 
     @IBAction func checkSurveys(_ sender: AnyObject) {
-        StudyManager.sharedInstance.checkSurveys();
+        _ = StudyManager.sharedInstance.checkSurveys();
     }
     @IBAction func leaveStudy(_ sender: AnyObject) {
         let alertController = UIAlertController(title: "Leave Study", message: "Are you sure you want to leave the current study?", preferredStyle: .alert)
@@ -218,7 +212,7 @@ class MainViewController: UIViewController {
         alertController.addAction(cancelAction)
 
         let OKAction = UIAlertAction(title: "OK", style: .default) { (action) in
-            StudyManager.sharedInstance.leaveStudy().then {_ -> Void in
+            _ = StudyManager.sharedInstance.leaveStudy().done { _ in
                 AppDelegate.sharedInstance().isLoggedIn = false;
                 AppDelegate.sharedInstance().transitionToCurrentAppState();
             }

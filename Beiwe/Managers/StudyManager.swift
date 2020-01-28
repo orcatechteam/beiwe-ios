@@ -31,9 +31,7 @@ class StudyManager {
     func loadDefaultStudy() -> Promise<Bool> {
         currentStudy = nil;
         gpsManager = nil;
-        return firstly { 
-            return Recline.shared.queryAll()
-            }.then { (studies: [Study]) -> Promise<Bool> in
+        return Recline.shared.queryAll().then { (studies: [Study]) -> Promise<Bool> in
             if (studies.count > 1) {
                 log.error("Multiple Studies: \(studies)")
                 Crashlytics.sharedInstance().recordError(NSError(domain: "com.rf.beiwe.studies", code: 1, userInfo: nil))
@@ -42,7 +40,7 @@ class StudyManager {
                 self.currentStudy = studies[0];
                 AppDelegate.sharedInstance().setDebuggingUser(self.currentStudy?.patientId ?? "unknown")
             }
-            return Promise(value: true);
+            return Promise.value(true);
         }
 
     }
@@ -51,10 +49,9 @@ class StudyManager {
         guard let currentStudy = currentStudy, gpsManager == nil else {
             return;
         }
-        var pkey: SecKey?;
+
         /* Setup APIManager's security */
         ApiManager.sharedInstance.password = PersistentPasswordManager.sharedInstance.passwordForStudy() ?? "";
-        ApiManager.sharedInstance.customApiUrl = currentStudy.customApiUrl;
         if let patientId = currentStudy.patientId {
             ApiManager.sharedInstance.patientId = patientId;
             if let clientPublicKey = currentStudy.studySettings?.clientPublicKey {
@@ -67,9 +64,9 @@ class StudyManager {
             } else {
                 log.error("No public key found.  Can't store");
             }
-
         }
     }
+    
     func startStudyDataServices() {
         if gpsManager != nil {
             return;
@@ -90,7 +87,7 @@ class StudyManager {
 
         DataStorageManager.sharedInstance.createDirectories();
         /* Move non current files out.  Probably not necessary, would happen later anyway */
-        DataStorageManager.sharedInstance.prepareForUpload();
+        _ = DataStorageManager.sharedInstance.prepareForUpload();
         gpsManager = GPSManager();
         
         // Check if gps fuzzing is enabled for currentStudy
@@ -129,12 +126,12 @@ class StudyManager {
             gpsManager!.addDataService(studySettings.motionOnDurationSeconds, off: studySettings.motionOffDurationSeconds, handler: DeviceMotionManager());
         }
 
-        gpsManager!.startGpsAndTimer();
+        _ = gpsManager!.startGpsAndTimer();
     }
 
     func setConsented() -> Promise<Bool> {
         guard let study = currentStudy, let studySettings = study.studySettings else {
-            return Promise(value: false);
+            return Promise.value(false);
         }
         setApiCredentials()
         let currentTime: Int64 = Int64(Date().timeIntervalSince1970);
@@ -150,35 +147,32 @@ class StudyManager {
     }
 
     func purgeStudies() -> Promise<Bool> {
-        return firstly {
-            return Recline.shared.queryAll()
-            }.then { (studies: [Study]) -> Promise<Bool> in
-                var promise = Promise<Bool>(value: true)
-                for study in studies {
-                    promise = promise.then { _ in
-                        return Recline.shared.purge(study)
-                    }
+        return Recline.shared.queryAll().then { (studies: [Study]) -> Promise<Bool> in
+            var promise = Promise.value(true)
+            for study in studies {
+                promise = promise.then { _ in
+                    return Recline.shared.purge(study)
                 }
-                return promise
+            }
+            return promise
         }
     }
 
     func stop() -> Promise<Bool> {
+        let queue = DispatchQueue.global(qos: .default)
+        
         var promise: Promise<Void>
         if (gpsManager != nil) {
             promise = gpsManager!.stopAndClear()
         } else {
             promise = Promise();
         }
-
-        return promise.then(on: DispatchQueue.global(qos: .default)) {
+    
+        return promise.then(on: queue) { _ -> Promise<Bool> in
             //self.gpsManager = nil;
             self.currentStudy = nil;
-            return Promise(value: true)
-            }.catch(on: DispatchQueue.global(qos: .default)) {_ in
-                print("Caught err")
+            return Promise.value(true)
         }
-
     }
 
     func leaveStudy() -> Promise<Bool> {
@@ -193,50 +187,52 @@ class StudyManager {
 
         var promise: Promise<Void>
         if (gpsManager != nil) {
-            promise = gpsManager!.stopAndClear()
+            promise = gpsManager!.stopAndClear().map{ _ in self.gpsManager = nil }
         } else {
             promise = Promise();
         }
 
 
         UIApplication.shared.cancelAllLocalNotifications()
-        return promise.then {
-            self.gpsManager = nil;
-                return self.purgeStudies().then { _ -> Promise<Bool> in
-                let fileManager = FileManager.default
-                var enumerator = fileManager.enumerator(atPath: DataStorageManager.uploadDataDirectory().path);
-
-                if let enumerator = enumerator {
-                    while let filename = enumerator.nextObject() as? String {
-                        if (true /*filename.hasSuffix(DataStorageManager.dataFileSuffix)*/) {
-                            let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename);
-                            try fileManager.removeItem(at: filePath);
-                        }
-                    }
-                }
-
-                enumerator = fileManager.enumerator(atPath: DataStorageManager.currentDataDirectory().path);
-
-                if let enumerator = enumerator {
-                    while let filename = enumerator.nextObject() as? String {
-                        if (true /* filename.hasSuffix(DataStorageManager.dataFileSuffix) */) {
-                            let filePath = DataStorageManager.currentDataDirectory().appendingPathComponent(filename);
-                            try fileManager.removeItem(at: filePath);
-                        }
-                    }
-                }
-                
-                self.currentStudy = nil;
-                
-                return Promise(value: true);
-                
-            }
+        return promise.then { _ -> Promise<Bool> in
+            self.purgeStudies()
+        }.then { _ in
+            self._removeStudyFiles()
         }
-
     }
 
+    func _removeStudyFiles() -> Promise<Bool> {
+        return Promise { seal in
+            let fileManager = FileManager.default
+            var enumerator = fileManager.enumerator(atPath: DataStorageManager.uploadDataDirectory().path);
+
+            if let enumerator = enumerator {
+                while let filename = enumerator.nextObject() as? String {
+                    if (true /*filename.hasSuffix(DataStorageManager.dataFileSuffix)*/) {
+                        let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename);
+                        try fileManager.removeItem(at: filePath);
+                    }
+                }
+            }
+
+            enumerator = fileManager.enumerator(atPath: DataStorageManager.currentDataDirectory().path);
+
+            if let enumerator = enumerator {
+                while let filename = enumerator.nextObject() as? String {
+                    if (true /* filename.hasSuffix(DataStorageManager.dataFileSuffix) */) {
+                        let filePath = DataStorageManager.currentDataDirectory().appendingPathComponent(filename);
+                        try fileManager.removeItem(at: filePath);
+                    }
+                }
+            }
+            
+            self.currentStudy = nil;
+            seal.fulfill(true)
+        }
+    }
+    
     @objc func reachabilityChanged(_ notification: Notification){
-        Promise().then() { () -> Void in
+        _ = Promise().done {
             log.info("Reachability changed, running periodic.");
             self.periodicNetworkTransfers();
         }
@@ -247,30 +243,37 @@ class StudyManager {
             return;
         }
 
-        let reachable = studySettings.uploadOverCellular ? self.appDelegate.reachability!.isReachable : self.appDelegate.reachability!.isReachableViaWiFi
-
+        var reachable = false
+        if self.appDelegate.reachability != nil {
+            reachable = studySettings.uploadOverCellular ? self.appDelegate.reachability!.isReachable : self.appDelegate.reachability!.isReachableViaWiFi
+        }
+        
         // Good time to compact the database
         let currentTime: Int64 = Int64(Date().timeIntervalSince1970);
         let nextSurvey = currentStudy.nextSurveyCheck ?? 0;
         let nextUpload = currentStudy.nextUploadCheck ?? 0;
+        
+        log.info("CurrentTime " + currentTime.description + ", NextUpload: " + nextUpload.description)
+        
         if (currentTime > nextSurvey || (reachable && currentStudy.missedSurveyCheck)) {
             /* This will be saved because setNextUpload saves the study */
             currentStudy.missedSurveyCheck = !reachable
-            self.setNextSurveyTime().then { _ -> Void in
+            self.setNextSurveyTime().done { _ in
                 if (reachable) {
-                    self.checkSurveys();
+                    _ = self.checkSurveys();
                 }
-                }.catch { _ -> Void in
-                    log.error("Error checking for surveys");
+            }.catch { _ in
+                log.error("Error checking for surveys");
             }
         }
         else if (currentTime > nextUpload || (reachable && currentStudy.missedUploadCheck)) {
+            log.info("Will upload at next upload time")
             /* This will be saved because setNextUpload saves the study */
             currentStudy.missedUploadCheck = !reachable
-            self.setNextUploadTime().then { _ -> Void in
-                self.upload(!reachable);
-                }.catch { _ -> Void in
-                    log.error("Error checking for uploads")
+            self.setNextUploadTime().done { _ in
+                _ = self.upload(!reachable);
+            }.catch { _ in
+                log.error("Error checking for uploads")
             }
         }
 
@@ -281,7 +284,7 @@ class StudyManager {
         removeNotificationForSurvey(activeSurvey);
         if let surveyId = activeSurvey.survey?.surveyId {
             let timingsName = TrackingSurveyPresenter.timingDataType + "_" + surveyId;
-            DataStorageManager.sharedInstance.closeStore(timingsName);
+            _ = DataStorageManager.sharedInstance.closeStore(timingsName);
         }
     }
 
@@ -294,7 +297,7 @@ class StudyManager {
             } else {
                 trackingSurvey = surveyPresenter!;
             }
-            trackingSurvey.finalizeSurveyAnswers();
+            _ = trackingSurvey.finalizeSurveyAnswers();
             if (activeSurvey.bwAnswers.count > 0) {
                 if let surveyType = survey.surveyType {
                     switch (surveyType) {
@@ -315,8 +318,8 @@ class StudyManager {
         guard let notification = survey.notification else {
             return;
         }
-
-        log.info("Cancelling notification: \(notification.alertBody), \(notification.userInfo)")
+        let alertBody = notification.alertBody ?? ""
+        log.info("Cancelling notification: \(alertBody), \(String(describing: notification.userInfo))")
 
         UIApplication.shared.cancelLocalNotification(notification);
         survey.notification = nil;
@@ -454,7 +457,7 @@ class StudyManager {
                                 "survey_type": surveyType.rawValue,
                                 "survey_id": id
                             ];
-                            log.info("Sending Survey notif: \(body), \(localNotif.userInfo)")
+                            log.info("Sending Survey notif: \(body), \(String(describing: localNotif.userInfo))")
                             UIApplication.shared.scheduleLocalNotification(localNotif);
                             activeSurvey.notification = localNotif;
 
@@ -511,45 +514,45 @@ class StudyManager {
     }
 
     func checkSurveys() -> Promise<Bool> {
-        guard let study = currentStudy, let studySettings = study.studySettings else {
-            return Promise(value: false);
+        guard let study = currentStudy, let _ = study.studySettings else {
+            return Promise.value(false);
         }
         log.info("Checking for surveys...");
         return Recline.shared.save(study).then { _ -> Promise<([Survey], Int)> in
                 let surveyRequest = GetSurveysRequest();
                 return ApiManager.sharedInstance.arrayPostRequest(surveyRequest);
-            }.then { (surveys, _) in
+            }.then { (surveys, _) -> Promise<Void> in
                 log.info("Surveys: \(surveys)");
                 study.surveys = surveys;
                 return Recline.shared.save(study).asVoid();
-            }.then {
-                self.updateActiveSurveys();
-                return Promise(value: true);
+            }.then { _ -> Promise<Bool> in
+                _ = self.updateActiveSurveys();
+                return Promise.value(true);
             }.recover { _ -> Promise<Bool> in
-                return Promise(value: false);
+                return Promise.value(false);
         }
 
     }
 
     func setNextUploadTime() -> Promise<Bool> {
         guard let study = currentStudy, let studySettings = study.studySettings else {
-            return Promise(value: true);
+            return Promise.value(true);
         }
 
-        study.nextUploadCheck = Int64(Date().timeIntervalSince1970) +  Int64(studySettings.uploadDataFileFrequencySeconds);
+        study.nextUploadCheck = Int64(Date().timeIntervalSince1970) + Int64(60) // Int64(studySettings.uploadDataFileFrequencySeconds);
         return Recline.shared.save(study).then { _ -> Promise<Bool> in
-            return Promise(value: true);
+            return Promise.value(true);
         }
     }
 
     func setNextSurveyTime() -> Promise<Bool> {
         guard let study = currentStudy, let studySettings = study.studySettings else {
-            return Promise(value: true);
+            return Promise.value(true);
         }
 
         study.nextSurveyCheck = Int64(Date().timeIntervalSince1970) + Int64(studySettings.checkForNewSurveysFreqSeconds)
         return Recline.shared.save(study).then { _ -> Promise<Bool> in
-            return Promise(value: true);
+            return Promise.value(true);
         }
 
     }
@@ -561,7 +564,7 @@ class StudyManager {
 
         var type = ""
 
-        let pieces = pathPrefix.characters.split(separator: "_")
+        let pieces = pathPrefix.split(separator: "_")
         var timestamp: Int64 = 0
         if (pieces.count > 2) {
             type = String(pieces[1])
@@ -569,14 +572,14 @@ class StudyManager {
         }
 
 
-        return (type: type, timestamp: timestamp, ext: pathExtention ?? "")
+        return (type: type, timestamp: timestamp, ext: pathExtention)
     }
 
     func purgeUploadData(_ fileList: [String:Int64], currentStorageUse: Int64) -> Promise<Void> {
         var used = currentStorageUse
-        return Promise().then(on: DispatchQueue.global(qos: .default)) {
+        return Promise().then(on: DispatchQueue.global(qos: .default)) { _ -> Promise<Void> in
             log.error("EXCESSIVE STORAGE USED, used: \(currentStorageUse), WifiAvailable: \(self.appDelegate.reachability!.isReachableViaWiFi)")
-            log.error("Last success: \(self.currentStudy?.lastUploadSuccess)")
+            log.error("Last success: \(String(describing: self.currentStudy?.lastUploadSuccess))")
             for (filename, len) in fileList {
                 log.error("file: \(filename), size: \(len)")
             }
@@ -614,7 +617,7 @@ class StudyManager {
     }
 
     func clearTempFiles() -> Promise<Void> {
-        return Promise().then(on: DispatchQueue.global(qos: .default)) {
+        return Promise().then(on: DispatchQueue.global(qos: .default)) { _ -> Promise<Void> in
             do {
                 let alamoTmpDir = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("com.alamofire.manager")!.appendingPathComponent("multipart.form.data")
                 try FileManager.default.removeItem(at: alamoTmpDir)
@@ -627,6 +630,7 @@ class StudyManager {
 
     func upload(_ processOnly: Bool) -> Promise<Void> {
         if (isUploading) {
+            log.info("Already uploaded")
             return Promise();
         }
         log.info("Checking for uploads...");
@@ -634,11 +638,11 @@ class StudyManager {
 
         var promiseChain: Promise<Bool>
 
-        promiseChain = Recline.shared.compact().then { _ -> Promise<Bool> in
-            return DataStorageManager.sharedInstance.prepareForUpload().then {
-                log.info("prepareForUpload finished")
-                return Promise(value: true)
-            };
+        promiseChain = Recline.shared.compact().then { _ in
+            DataStorageManager.sharedInstance.prepareForUpload()
+        }.map { _ in
+            log.info("prepareForUpload finished")
+            return true
         }
 
         var numFiles = 0;
@@ -650,7 +654,7 @@ class StudyManager {
         return promiseChain.then(on: q) { (_: Bool) -> Promise<Bool> in
             let fileManager = FileManager.default
             let enumerator = fileManager.enumerator(atPath: DataStorageManager.uploadDataDirectory().path)
-            var uploadChain = Promise<Bool>(value: true)
+            var uploadChain = Promise.value(true)
             if let enumerator = enumerator {
                 while let filename = enumerator.nextObject() as? String {
                     if (DataStorageManager.sharedInstance.isUploadFile(filename)) {
@@ -668,7 +672,7 @@ class StudyManager {
                 for (filename, len) in filesToProcess {
                     let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename);
                     let uploadRequest = UploadRequest(fileName: filename, filePath: filePath.path);
-                    uploadChain = uploadChain.then {_ in
+                    uploadChain = uploadChain.then {_ -> Promise<Bool> in
                         log.info("Uploading: \(filename)")
                         return ApiManager.sharedInstance.makeMultipartUploadRequest(uploadRequest, file: filePath).then { _ -> Promise<Bool> in
                             log.info("Finished uploading: \(filename), removing.");
@@ -677,17 +681,17 @@ class StudyManager {
                             try fileManager.removeItem(at: filePath);
                             storageInUse = storageInUse - len
                             filesToProcess.removeValue(forKey: filename)
-                            return Promise(value: true);
+                            return Promise.value(true);
                         }
                     }.recover { error -> Promise<Bool> in
                         AppEventManager.sharedInstance.logAppEvent(event: "upload_file_failed", msg: "Failed Uploaded data file", d1: filename)
-                        return Promise(value: true)
+                        return Promise.value(true)
                     }
                 }
                 return uploadChain
             } else {
                 log.info("Skipping upload, processing only")
-                return Promise(value: true)
+                return Promise.value(true)
             }
         }.then { (results: Bool) -> Promise<Void> in
             log.info("OK uploading \(numFiles). \(results)");
@@ -713,7 +717,7 @@ class StudyManager {
             }
         }.then {
             return self.clearTempFiles()
-        }.always {
+        }.ensure {
             self.isUploading = false
             log.info("Always")
         }

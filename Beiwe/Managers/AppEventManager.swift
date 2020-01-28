@@ -30,50 +30,14 @@ class AppEventManager : DataServiceProtocol {
         return store != nil;
     }
 
-    func didLaunch(launchOptions: [UIApplicationLaunchOptionsKey: Any]?) {
+    func didLaunch(launchOptions: [UIApplication.LaunchOptionsKey: Any]?) {
         self.launchOptions = ""
         self.launchTimestamp = Date();
-        if ((launchOptions?.index(forKey: UIApplicationLaunchOptionsKey.location)) != nil) {
+        if ((launchOptions?.index(forKey: UIApplication.LaunchOptionsKey.location)) != nil) {
             self.launchOptions = "location"
-            /*
-            let localNotif = UILocalNotification();
-            //localNotif.fireDate = currentDate;
-
-            let body: String = "Beiwe was Launched in the background";
-
-            localNotif.alertBody = body;
-            localNotif.soundName = UILocalNotificationDefaultSoundName;
-            UIApplication.shared.scheduleLocalNotification(localNotif);
-             */
-
         }
-        /*
-        if let launchOptions = launchOptions {
-            for (kind, _) in launchOptions {
-                if (self.launchOptions != "") {
-                    self.launchOptions = self.launchOptions + ":"
-                }
-                self.launchOptions = self.launchOptions + String(describing: kind)
-            }
-        }
-         */
         log.info("AppEvent didLaunch, launchId: \(launchId), options: \(self.launchOptions)");
     }
-
-    /*
-    func didLockUnlock(_ isLocked: Bool) {
-        log.info("Lock state data changed: \(isLocked)");
-        var data: [String] = [ ];
-        data.append(String(Int64(Date().timeIntervalSince1970 * 1000)));
-        let state: String = isLocked ? "Locked" : "Unlocked";
-        data.append(state);
-        data.append(String(UIDevice.current.batteryLevel));
-
-        self.store?.store(data);
-        self.store?.flush();
-
-    }
-     */
 
     func getMemory() -> String {
 
@@ -115,8 +79,8 @@ class AppEventManager : DataServiceProtocol {
         seq = seq + 1
 
 
-        self.store?.store(data);
-        self.store?.flush();
+        _ = self.store?.store(data);
+        _ = self.store?.flush();
     }
 
     func initCollecting() -> Bool {
@@ -144,7 +108,7 @@ class AppEventManager : DataServiceProtocol {
         isCollecting = false
         log.info("Pausing \(storeType) collection");
         listeners = [ ];
-        store!.flush();
+        _ = store!.flush();
     }
     func finishCollecting() -> Promise<Void> {
         log.info("Finish collecting \(storeType) collection");

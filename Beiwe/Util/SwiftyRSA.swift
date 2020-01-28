@@ -120,7 +120,7 @@ open class SwiftyRSA: NSObject {
     open func encryptString(_ str: String, publicKey: SecKey, padding: SecPadding = defaultPadding) throws -> String {
         let blockSize = SecKeyGetBlockSize(publicKey)
         let plainTextData = [UInt8](str.utf8)
-        let plainTextDataLength = Int(str.characters.count)
+        let plainTextDataLength = Int(str.count)
         var encryptedData = [UInt8](repeating: 0, count: Int(blockSize))
         var encryptedDataLength = blockSize
 
@@ -296,7 +296,7 @@ open class SwiftyRSA: NSObject {
         let seqiod: [CUnsignedChar] = [0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01,
                                        0x01, 0x05, 0x00]
         //byteArray.replaceRange(Range<Int>(start: index, end: index + seqiod.count), with: seqiod)
-        byteArray.replaceSubrange(CountableRange<Int>(index ..< index + seqiod.count), with: seqiod)
+        byteArray.replaceSubrange(index ..< index + seqiod.count, with: seqiod)
 
         index += 15
 

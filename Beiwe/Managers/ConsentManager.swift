@@ -35,9 +35,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
     }
 }
 
-class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
-
-
+@objc class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
     let pscope = AppDelegate.sharedInstance().pscope;
     var retainSelf: AnyObject?;
     var consentViewController: ORKTaskViewController!;
@@ -46,7 +44,6 @@ class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
     var PermissionsStep: ORKStep {
         let instructionStep = ORKInstructionStep(identifier: StepIds.Permission.rawValue)
         instructionStep.title = "Permissions";
-        //instructionStep.text = "This app requires your access to your location at all times.  It just won't work without it.  We'd also like to notify you when it's time to fill out the next survey";
         instructionStep.text = "Beiwe needs access to your location for the passive data gathering capabilities of this app. Beiwe will also send you notifications to notify you of new surveys.";
         return instructionStep;
     }
@@ -66,8 +63,6 @@ class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
         // Set up permissions
 
         var steps = [ORKStep]();
-
-
         if (!hasRequiredPermissions()) {
             steps += [PermissionsStep];
             steps += [ORKWaitStep(identifier: StepIds.WaitForPermissions.rawValue)];
@@ -78,7 +73,6 @@ class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
         consentDocument.title = "Beiwe Consent"
 
         let studyConsentSections = StudyManager.sharedInstance.currentStudy?.studySettings?.consentSections ?? [:];
-
 
         let overviewSection = ORKConsentSection(type: .overview);
         if let welcomeStudySection = studyConsentSections["welcome"], !welcomeStudySection.text.isEmpty {
@@ -122,8 +116,6 @@ class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
         let visualConsentStep = ORKVisualConsentStep(identifier: StepIds.VisualConsent.rawValue, document: consentDocument)
         steps += [visualConsentStep]
 
-        //let signature = consentDocument.signatures!.first!
-
         if (hasAdditionalConsent) {
             let reviewConsentStep = ORKConsentReviewStep(identifier: StepIds.ConsentReview.rawValue, signature: nil, in: consentDocument)
 
@@ -134,8 +126,6 @@ class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
         }
 
         let task = ORKNavigableOrderedTask(identifier: "ConsentTask", steps: steps)
-        //let waitForPermissionRule = WaitForPermissionsRule(coder: NSCoder())
-        //task.setNavigationRule(waitForPermissionRule!, forTriggerStepIdentifier: StepIds.WaitForPermissions.rawValue)
         task.setNavigationRule(WaitForPermissionsRule() { [weak self] taskResult -> String in
             if (self?.pscope.statusLocationAlways() == .authorized) {
                 return StepIds.VisualConsent.rawValue
@@ -162,48 +152,30 @@ class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
     /* ORK Delegates */
 
     func taskViewController(_ taskViewController: ORKTaskViewController, didFinishWith reason: ORKTaskViewControllerFinishReason, error: Error?) {
-        //Handle results with taskViewController.result
-        //taskViewController.dismissViewControllerAnimated(true, completion: nil)
         if (reason == ORKTaskViewControllerFinishReason.discarded) {
-            StudyManager.sharedInstance.leaveStudy().then { _ -> Void in
+            _ = StudyManager.sharedInstance.leaveStudy().done { _ in
                 self.closeOnboarding();
             }
         } else {
-            StudyManager.sharedInstance.setConsented().then { _ -> Void in
+            _ = StudyManager.sharedInstance.setConsented().done { _ in
                 self.closeOnboarding();
             }
         }
     }
 
     func taskViewController(_ taskViewController: ORKTaskViewController, didChange result: ORKTaskResult) {
-
         return;
     }
 
     func taskViewController(_ taskViewController: ORKTaskViewController, shouldPresent step: ORKStep) -> Bool {
-        /*
-        if let identifier = StepIds(rawValue: step.identifier) {
-            switch(identifier) {
-            case .WarningStep:
-                if (pscope.statusLocationAlways() == .Authorized) {
-                    taskViewController.goForward();
-                    return false;
-                }
-            default: break
-            }
-        }
-        */
         return true;
-
     }
 
     func taskViewController(_ taskViewController: ORKTaskViewController, learnMoreForStep stepViewController: ORKStepViewController) {
         // Present modal...
-        let refreshAlert = UIAlertController(title: "Learning more!", message: "You're smart now", preferredStyle: UIAlertControllerStyle.alert)
+        let refreshAlert = UIAlertController(title: "Learning more!", message: "You're smart now", preferredStyle: UIAlertController.Style.alert)
 
-        refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction!) in
-        }))
-
+        refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction!) in }))
 
         consentViewController.present(refreshAlert, animated: true, completion: nil)
     }
@@ -227,9 +199,9 @@ class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
                     if (self.hasRequiredPermissions()) {
                         stepViewController.goForward();
                     }
-                    }, cancelled: { (results) in
-                        log.info("Permissions cancelled");
-                        stepViewController.goForward();
+                }, cancelled: { (results) in
+                    log.info("Permissions cancelled");
+                    stepViewController.goForward();
                 })
             case .Permission:
                 stepViewController.continueButtonTitle = "Permissions";
@@ -246,7 +218,5 @@ class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
             default: break;
             }
         }
-
-        //stepViewController.continueButtonTitle = "Go!"
     }
 }

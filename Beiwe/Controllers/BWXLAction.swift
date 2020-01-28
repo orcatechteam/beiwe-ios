@@ -123,7 +123,7 @@ open class BWXLHeaderView: UICollectionReusableView {
         
         let views = [ "ico": imageView, "title": title, "artist": artist, "separator": separator ]
         let metrics = [ "icow": 54, "icoh": 54 ]
-        let options = NSLayoutFormatOptions()
+        let options = NSLayoutConstraint.FormatOptions()
         
         addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-15-[ico(icow)]-10-[title]-15-|", options: options, metrics: metrics, views: views))
         addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[separator]|", options: options, metrics: metrics, views: views))
@@ -138,7 +138,7 @@ open class BWXLActionController: ActionController<BWXLCell, ActionData, BWXLHead
     
     fileprivate lazy var blurView: UIVisualEffectView = {
         let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-        blurView.autoresizingMask = UIViewAutoresizing.flexibleHeight.union(.flexibleWidth)
+        blurView.autoresizingMask = UIView.AutoresizingMask.flexibleHeight.union(.flexibleWidth)
         return blurView
     }()
 

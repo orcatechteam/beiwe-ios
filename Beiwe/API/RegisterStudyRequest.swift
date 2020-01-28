@@ -26,20 +26,30 @@ struct RegisterStudyRequest : Mappable, ApiRequest {
     var brand = "apple";
     var manufacturer = "apple";
 
-
+    public static func determineModel() -> String {
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let machineMirror = Mirror(reflecting: systemInfo.machine)
+        let identifier = machineMirror.children.reduce("") { identifier, element in
+          guard let value = element.value as? Int8, value != 0 else { return identifier }
+          return identifier + String(UnicodeScalar(UInt8(value)))
+        }
+        return identifier
+    }
+    
     init() {
         //
         if let version = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
             appVersion = version;
         }
+        
         let uiDevice = UIDevice.current;
         osName = uiDevice.systemName;
         osVersion = uiDevice.systemVersion;
-        product = uiDevice.model;
+        product = RegisterStudyRequest.determineModel();
         model = platform();
-
-
     }
+    
     init(patientId: String, phoneNumber: String, newPassword: String) {
         self.init();
         self.patientId = patientId;

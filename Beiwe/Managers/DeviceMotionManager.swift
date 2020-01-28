@@ -83,7 +83,7 @@ class DeviceMotionManager : DataServiceProtocol {
                 data.append(String(motionData.magneticField.field.y))
                 data.append(String(motionData.magneticField.field.z))
 
-                self.store?.store(data);
+                _ = self.store?.store(data);
             }
         }
         AppEventManager.sharedInstance.logAppEvent(event: "devicemotion_on", msg: "DeviceMotion collection on")
@@ -91,7 +91,7 @@ class DeviceMotionManager : DataServiceProtocol {
     func pauseCollecting() {
         log.info("Pausing \(storeType) collection");
         motionManager.stopDeviceMotionUpdates();
-        store?.flush();
+        _ = store?.flush();
         AppEventManager.sharedInstance.logAppEvent(event: "devicemotion_off", msg: "DeviceMotion collection off")
     }
     func finishCollecting() -> Promise<Void> {

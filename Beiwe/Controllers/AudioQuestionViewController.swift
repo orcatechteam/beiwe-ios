@@ -58,7 +58,7 @@ class AudioQuestionViewController: UIViewController, AVAudioRecorderDelegate, AV
         recordingSession = AVAudioSession.sharedInstance()
 
         do {
-            try recordingSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
+            try recordingSession.setCategory(AVAudioSession.Category.playAndRecord)
             try recordingSession.setActive(true)
             recordingSession.requestRecordPermission() { [unowned self] (allowed: Bool) -> Void in
                 DispatchQueue.main.async {
@@ -76,10 +76,10 @@ class AudioQuestionViewController: UIViewController, AVAudioRecorderDelegate, AV
         if let study = StudyManager.sharedInstance.currentStudy {
             // Just need to put any old answer in here...
             activeSurvey.bwAnswers["A"] = "A"
-            Recline.shared.save(study).then {_ in
+            Recline.shared.save(study).done {_ in
                 log.info("Saved.");
-                }.catch { e in
-                    log.error("Error saving updated answers: \(e)");
+            }.catch { e in
+                log.error("Error saving updated answers: \(e)");
             }
         }
 
@@ -247,7 +247,7 @@ class AudioQuestionViewController: UIViewController, AVAudioRecorderDelegate, AV
     }
 
     func writeSomeData(_ handle: FileHandle, encFile: EncryptedStorage) -> Promise<Void> {
-        return Promise().then(on: DispatchQueue.global(qos: .background)) {
+        return Promise().then(on: DispatchQueue.global(qos: .background)) { _ -> Promise<Void> in
             let data: Data = handle.readData(ofLength: self.OUTPUT_CHUNK_SIZE)
             if (data.count > 0) {
                 return encFile.write(data as NSData, writeLen: data.count).then {
@@ -263,7 +263,7 @@ class AudioQuestionViewController: UIViewController, AVAudioRecorderDelegate, AV
 
     func saveEncryptedAudio() -> Promise<Void> {
         
-        if let study = StudyManager.sharedInstance.currentStudy {
+        if StudyManager.sharedInstance.currentStudy != nil {
             var fileHandle: FileHandle
             do {
                 fileHandle = try FileHandle(forReadingFrom: filename!)
@@ -275,7 +275,7 @@ class AudioQuestionViewController: UIViewController, AVAudioRecorderDelegate, AV
             let encFile = DataStorageManager.sharedInstance.createEncryptedFile(type: name, suffix: suffix)
             return encFile.open().then {
                 return self.writeSomeData(fileHandle, encFile: encFile)
-            }.always {
+            }.ensure {
                 fileHandle.closeFile()
             }
         } else {
@@ -295,10 +295,10 @@ class AudioQuestionViewController: UIViewController, AVAudioRecorderDelegate, AV
         HUD.show(.labeledProgress(title: "Saving", subtitle: ""))
         AppEventManager.sharedInstance.logAppEvent(event: "audio_save", msg: "Save audio pressed")
 
-         saveEncryptedAudio().then { _ -> Void in
+        saveEncryptedAudio().done { _ in
             self.activeSurvey.isComplete = true;
             StudyManager.sharedInstance.cleanupSurvey(self.activeSurvey)
-            StudyManager.sharedInstance.updateActiveSurveys(true);
+            _ = StudyManager.sharedInstance.updateActiveSurveys(true);
             HUD.flash(.success, delay: 0.5)
             self.cleanupAndDismiss()
         }.catch { err in
@@ -337,7 +337,7 @@ class AudioQuestionViewController: UIViewController, AVAudioRecorderDelegate, AV
             text = "Play"
         }
         recordPlayButton.setTitle(text, for: .highlighted)
-        recordPlayButton.setTitle(text, for: UIControlState())
+        recordPlayButton.setTitle(text, for: UIControl.State())
         recordPlayButton.setTitle(text, for: .disabled)
 
     }
@@ -404,7 +404,7 @@ class AudioQuestionViewController: UIViewController, AVAudioRecorderDelegate, AV
     }
 
     func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
-        log.error("Error received in audio recorded: \(error)")
+        log.error("Error received in audio recorded: \(String(describing: error))")
         enableIdleTimer();
         self.recorder?.deleteRecording()
         reset()

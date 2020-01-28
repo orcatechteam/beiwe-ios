@@ -61,7 +61,7 @@ class EncryptedStorage {
         guard let aesKey = aesKey, let iv = iv else {
             return Promise(error: DataStorageErrors.notInitialized)
         }
-        return Promise().then(on: queue) {
+        return Promise().then(on: queue) { _  -> Promise<Void> in
             if (!self.fileManager.createFile(atPath: self.filename.path, contents: nil, attributes: [FileAttributeKey(rawValue: FileAttributeKey.protectionKey.rawValue): FileProtectionType.none])) {
                 return Promise(error: DataStorageErrors.cantCreateFile)
             } else {
@@ -84,7 +84,7 @@ class EncryptedStorage {
     }
 
     func close() -> Promise<Void> {
-        return write(nil, writeLen: 0, isFlush: true).then(on: queue) {
+        return write(nil, writeLen: 0, isFlush: true).then(on: queue) { _ -> Promise<Void> in
             if let handle = self.handle {
                 handle.closeFile()
                 self.handle = nil
@@ -97,59 +97,67 @@ class EncryptedStorage {
 
     func _write(_ data: NSData, len: Int) -> Promise<Int> {
         if (len == 0) {
-            return Promise(value: 0);
+            return Promise.value(0);
         }
-        return Promise().then(on: queue) {
+        return Promise().then(on: queue) { _ -> Promise<Int> in
             self.hasData = true
             let dataToWriteBuffer = UnsafeMutableRawPointer(mutating: data.bytes)
             let dataToWrite = NSData(bytesNoCopy: dataToWriteBuffer, length: len, freeWhenDone: false)
             let encodedData: String = Crypto.sharedInstance.base64ToBase64URL(dataToWrite.base64EncodedString(options: []))
             self.handle?.write(encodedData.data(using: String.Encoding.utf8)!)
-            return Promise(value: len)
+            return Promise.value(len)
         }
 
     }
 
     func write(_ data: NSData?, writeLen: Int, isFlush: Bool = false) -> Promise<Void> {
-        return Promise().then(on: queue) {
-            if (data != nil && writeLen != 0) {
-                // Need to encrypt data
-                let encryptLen = self.sc.getOutputLength(inputByteCount: writeLen)
-                let bufferOut = UnsafeMutablePointer<Void>.allocate(capacity: encryptLen)
-                var byteCount: Int = 0
-                let bufferIn = UnsafeMutableRawPointer(mutating: data!.bytes)
-                self.sc.update(bufferIn: bufferIn, byteCountIn: writeLen, bufferOut: bufferOut, byteCapacityOut: encryptLen, byteCountOut: &byteCount)
-                self.currentData.append(NSData(bytesNoCopy: bufferOut, length: byteCount) as Data)
-            }
-            if (isFlush) {
-                let encryptLen = self.sc.getOutputLength(inputByteCount: 0, isFinal: true)
-                if (encryptLen > 0) {
-                    let bufferOut = UnsafeMutablePointer<Void>.allocate(capacity: encryptLen)
-                    var byteCount: Int = 0
-                    self.sc.final(bufferOut: bufferOut, byteCapacityOut: encryptLen, byteCountOut: &byteCount)
-                    let finalData = NSData(bytesNoCopy: bufferOut, length: byteCount);
-
-                    let count = finalData.length / MemoryLayout<UInt8>.size
-
-                    // create array of appropriate length:
-                    var array = [UInt8](repeating: 0, count: count)
-
-                    // copy bytes into array
-                    finalData.getBytes(&array, length:count * MemoryLayout<UInt8>.size)
-                    self.currentData.append(finalData as Data)
-                }
-            }
-            // Only write multiples of 3, since we are base64 encoding and would otherwise end up with padding
-            var evenLength: Int
-            if (isFlush) {
-                evenLength = self.currentData.length
-            } else {
-                evenLength = (self.currentData.length / 3) * 3
-            }
-            return self._write(self.currentData, len: evenLength)
-            }.then(on: queue) { evenLength in
-                self.currentData.replaceBytes(in: NSRange(0..<evenLength), withBytes: nil, length: 0)
+        return Promise().then(on: queue) { _ in
+            self._writeEncrpyted(data, writeLen: writeLen, isFlush: isFlush);
+        }.map(on: queue) { evenLength in
+            self._replaceBytes(evenLength: evenLength);
         }
+    }
+    
+    func _writeEncrpyted(_ data: NSData?, writeLen: Int, isFlush: Bool = false) -> Promise<Int> {
+        if (data != nil && writeLen != 0) {
+            // Need to encrypt data
+            let encryptLen = self.sc.getOutputLength(inputByteCount: writeLen)
+            let bufferOut = UnsafeMutablePointer<Void>.allocate(capacity: encryptLen);
+            var byteCount: Int = 0
+            let bufferIn = UnsafeMutableRawPointer(mutating: data!.bytes)
+            self.sc.update(bufferIn: bufferIn, byteCountIn: writeLen, bufferOut: bufferOut, byteCapacityOut: encryptLen, byteCountOut: &byteCount)
+            self.currentData.append(NSData(bytesNoCopy: bufferOut, length: byteCount) as Data)
+        }
+        if (isFlush) {
+            let encryptLen = self.sc.getOutputLength(inputByteCount: 0, isFinal: true)
+            if (encryptLen > 0) {
+                let bufferOut = UnsafeMutablePointer<Void>.allocate(capacity: encryptLen);
+                var byteCount: Int = 0
+                self.sc.final(bufferOut: bufferOut, byteCapacityOut: encryptLen, byteCountOut: &byteCount);
+                let finalData = NSData(bytesNoCopy: bufferOut, length: byteCount);
+
+                let count = finalData.length / MemoryLayout<UInt8>.size
+
+                // create array of appropriate length:
+                var array = [UInt8](repeating: 0, count: count)
+
+                // copy bytes into array
+                finalData.getBytes(&array, length:count * MemoryLayout<UInt8>.size)
+                self.currentData.append(finalData as Data)
+            }
+        }
+        // Only write multiples of 3, since we are base64 encoding and would otherwise end up with padding
+        var evenLength: Int
+        if (isFlush) {
+            evenLength = self.currentData.length
+        } else {
+            evenLength = (self.currentData.length / 3) * 3
+        }
+        return self._write(self.currentData, len: evenLength)
+    }
+    
+    func _replaceBytes(evenLength: Int) -> Void {
+        self.currentData.replaceBytes(in: NSRange(0..<evenLength), withBytes: nil, length: 0);
     }
 
     deinit {
@@ -275,7 +283,7 @@ class DataStorage {
             if let encrypted = encrypted  {
                 lines.append(Crypto.sharedInstance.base64ToBase64URL(iv.base64EncodedString(options: [])) + ":" + Crypto.sharedInstance.base64ToBase64URL(encrypted.base64EncodedString(options: [])) + "\n")
                 if (lines.count >= flushLines) {
-                    flush(false);
+                    _ = flush(false);
                 }
             }
         } else {
@@ -290,12 +298,12 @@ class DataStorage {
         dataPoints = dataPoints + 1;
         _writeLine(line);
         if (noBuffer) {
-            flush(false);
+            _ = flush(false);
         }
     }
 
     func store(_ data: [String]) -> Promise<Void> {
-        return Promise().then(on: queue) {
+        return Promise().then(on: queue) { _ -> Promise<Void> in
             var sanitizedData: [String];
             if (self.sanitize) {
                 sanitizedData = [];
@@ -312,7 +320,7 @@ class DataStorage {
     }
 
     func flush(_ reset: Bool = false) -> Promise<Void> {
-        return Promise().then(on: queue) {
+        return Promise().then(on: queue) { _ -> Promise<Void> in
             self.logClosures = [ ];
             if (!self.hasData || self.lines.count == 0) {
                 if (reset) {
@@ -487,7 +495,7 @@ class DataStorageManager {
                 fileHandle.closeFile()
             }
             let dataString = String(data: fileHandle.readData(ofLength: 2048), encoding: String.Encoding.utf8)
-            let dataArray = dataString?.characters.split{$0 == "\n"}.map(String.init)
+            let dataArray = dataString?.split{$0 == "\n"}.map(String.init)
             if let dataArray = dataArray, dataArray.count > 0 {
                 firstLine = dataArray[0]
             } else {
@@ -503,6 +511,50 @@ class DataStorageManager {
 
 
     }
+    
+    func prepareForUpload() -> Promise<Void> {
+        let queue = DispatchQueue.global(qos: .default);
+        var filesToUpload: [String] = [ ]
+        
+        return Promise().then(on: queue) { _ in
+            // Flush once to get all of the files currently processing
+            self._flushAll();
+        }.map(on: queue) {
+            filesToUpload = self._findFilesToUpload();
+        }.then(on: queue) { _ in
+            // Need to flush again, because there is a very slim chance one of those files was created after the flush
+            self._flushAll()
+        }.map(on: queue) { _ in
+            self._moveFiles(files: filesToUpload);
+        }
+    }
+    
+    func _findFilesToUpload() -> [String] {
+        let fileManager = FileManager.default
+        let enumerator = fileManager.enumerator(atPath: DataStorageManager.currentDataDirectory().path);
+
+        var filesToUpload: [String] = [ ]
+        if let enumerator = enumerator {
+            while let filename = enumerator.nextObject() as? String {
+                if (self.isUploadFile(filename)) {
+                    filesToUpload.append(filename)
+                } else {
+                    log.warning("Non upload file sitting in directory: \(filename)")
+                }
+            }
+        }
+        
+        return filesToUpload
+    }
+
+    func _moveFiles(files: [String]) -> Void {
+        for filename in files {
+            let src = DataStorageManager.currentDataDirectory().appendingPathComponent(filename);
+            let dst = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename);
+            self._moveFile(src, dst: dst)
+        }
+    }
+    
     func _moveFile(_ src: URL, dst: URL) {
         let fileManager = FileManager.default
         do {
@@ -514,38 +566,7 @@ class DataStorageManager {
             log.error("Error moving \(src) to \(dst)");
         }
     }
-    func prepareForUpload() -> Promise<Void> {
-        // self._flushAll()
-        let prepQ = DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default)
-        var filesToUpload: [String] = [ ]
-        /* Flush once to get all of the files currently processing */
-        return self._flushAll().then(on: prepQ) {
-            /* And record there names */
-            let fileManager = FileManager.default
-
-                let enumerator = fileManager.enumerator(atPath: DataStorageManager.currentDataDirectory().path);
-
-                if let enumerator = enumerator {
-                    while let filename = enumerator.nextObject() as? String {
-                        if (self.isUploadFile(filename)) {
-                            filesToUpload.append(filename)
-                        } else {
-                            log.warning("Non upload file sitting in directory: \(filename)")
-                        }
-                    }
-                }
-                /* Need to flush again, because there is (very slim) one of those files was created after the flush */
-                return self._flushAll()
-            }.then(on: prepQ) {
-                for filename in filesToUpload {
-                    let src = DataStorageManager.currentDataDirectory().appendingPathComponent(filename);
-                    let dst = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename);
-                    self._moveFile(src, dst: dst)
-                }
-                return Promise()
-        }
-    }
-
+    
     func createEncryptedFile(type: String, suffix: String) -> EncryptedStorage {
         return EncryptedStorage(type: type, suffix: suffix, patientId: study!.patientId!, publicKey: PersistentPasswordManager.sharedInstance.publicKeyName(study!.patientId!), keyRef: secKeyRef)
     }

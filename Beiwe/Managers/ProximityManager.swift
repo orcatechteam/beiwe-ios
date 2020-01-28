@@ -21,8 +21,8 @@ class ProximityManager : DataServiceProtocol {
         data.append(String(Int64(Date().timeIntervalSince1970 * 1000)));
         data.append(UIDevice.current.proximityState ? "NearUser" : "NotNearUser");
 
-        self.store?.store(data);
-        self.store?.flush();
+        _ = self.store?.store(data);
+        _ = self.store?.flush();
     }
 
     func initCollecting() -> Bool {
@@ -33,13 +33,13 @@ class ProximityManager : DataServiceProtocol {
     func startCollecting() {
         log.info("Turning \(storeType) collection on");
         UIDevice.current.isProximityMonitoringEnabled = true;
-        NotificationCenter.default.addObserver(self, selector: #selector(self.proximityStateDidChange), name: NSNotification.Name.UIDeviceProximityStateDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.proximityStateDidChange), name: UIDevice.proximityStateDidChangeNotification, object: nil)
         AppEventManager.sharedInstance.logAppEvent(event: "proximity_on", msg: "Proximity collection on")
     }
     func pauseCollecting() {
         log.info("Pausing \(storeType) collection");
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIDeviceProximityStateDidChange, object:nil)
-        store!.flush();
+        NotificationCenter.default.removeObserver(self, name: UIDevice.proximityStateDidChangeNotification, object:nil)
+        _ = store!.flush();
         AppEventManager.sharedInstance.logAppEvent(event: "proximity_off", msg: "Proximity collection off")
     }
     func finishCollecting() -> Promise<Void> {
