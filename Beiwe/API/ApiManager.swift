@@ -94,7 +94,7 @@ class ApiManager {
             return self.doPostRequest(requestObject, request: request);
         }
     }
-    
+
     func makeURLParameterString(parameters: [String:Any])->String {
         var out: String = ""
         parameters.forEach({ (key, value) in
@@ -106,19 +106,19 @@ class ApiManager {
         print("Parameter string: \(out)")
         return out
     }
-    
+
     func computeDigest(time: Int64, nonce: String, content: String)->String{
         return Crypto.sharedInstance.sha256Base64( content + "," + nonce + "," + String(time));
     }
-    
+
     func digestHeaderString(string: String, nonce: String) -> String {
         let time = Int64(Date().timeIntervalSince1970);
-        let digest = computeDigest(time: time, nonce: nonce, content:Crypto.sharedInstance.base64URL(string));
-        return String(time) + " " + digest
+        let digest = computeDigest(time: time, nonce: nonce, content: string);
+        return String(time) + " " + digest;
     }
     
     func digestHeaderParameter(request: URLRequest, nonce: String) -> String {
-        let content = Crypto.sharedInstance.base64ToBase64URL( request.httpBody!.base64EncodedString() );
+        let content = request.httpBody!.base64EncodedString();
         return digestHeaderString(string: content, nonce: nonce)
     }
     
