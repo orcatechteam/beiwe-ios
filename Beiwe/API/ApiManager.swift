@@ -111,6 +111,7 @@ class ApiManager {
         return Crypto.sharedInstance.sha256Base64( content + "," + nonce + "," + String(time));
     }
 
+    // string should be base64 encoded!
     func digestHeaderString(string: String, nonce: String) -> String {
         let time = Int64(Date().timeIntervalSince1970);
         let digest = computeDigest(time: time, nonce: nonce, content: string);
@@ -125,7 +126,8 @@ class ApiManager {
     func digestHeaderFile(file: URL, nonce: String) -> String {
         let md5 = Crypto.sharedInstance.md5(url: file)
         print("MD5: \(md5 ?? "")")
-        return digestHeaderString(string: md5 ?? "", nonce: nonce)
+        let stringBase64 = Crypto.sharedInstance.base64URL(md5 ?? "");
+        return digestHeaderString(string: stringBase64, nonce: nonce)
     }
     
     func getNonce(headers: [String:String])->Promise<String> {
@@ -246,13 +248,14 @@ class ApiManager {
     }
     
     func appendWithDigest(_ multipartFormData: MultipartFormData, nonce:String, name: String, string: String) {
+        let stringBase64 = Crypto.sharedInstance.base64URL(string);
         let headers: HTTPHeaders = [
             "Content-Type": "application/octet-stream",
             "Content-Disposition":"form-data; name=\"\(name)\"",
             "X-Content-Digest-Type": "basic",
-            "X-Content-Digest": digestHeaderString(string: string, nonce: nonce),
+            "X-Content-Digest": digestHeaderString(string: stringBase64, nonce: nonce),
         ]
-        
+
         let data = string.data(using: .utf8)!
         let stream = InputStream(data: data)
         let length = UInt64(data.count)
@@ -279,7 +282,7 @@ class ApiManager {
             "X-Content-Digest-Type": "md5",
             "X-Content-Digest": digestHeaderFile(file: fileURL, nonce: nonce),
         ]
-        
+
         let stream = InputStream(url: fileURL)
         if stream == nil {
             throw "could not open file input stream"
