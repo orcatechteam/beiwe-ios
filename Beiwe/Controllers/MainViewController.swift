@@ -63,6 +63,17 @@ class MainViewController: UIViewController {
 
         refreshSurveys();
 
+        if (AppDelegate.sharedInstance().hideMainContent) {
+            let lbl = UILabel()
+            lbl.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height)
+            lbl.textAlignment = .center
+            lbl.text = "Registration complete!\n\nYou may continue to use your device as you normally would."
+            lbl.numberOfLines = 4;
+            lbl.backgroundColor = .black
+            lbl.textColor = .white
+            lbl.changeFont(ofText: "Registration")
+            self.view.addSubview(lbl)
+        }
     }
 
     func refreshSurveys() {

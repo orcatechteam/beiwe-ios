@@ -34,6 +34,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var canOpenTel = false;
     let debugEnabled  = _isDebugAssertConfiguration();
     let lockEvent = Event<Bool>()
+    let hideMainContent = true;
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
