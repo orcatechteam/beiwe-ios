@@ -67,7 +67,7 @@ class MainViewController: UIViewController {
             let lbl = UILabel()
             lbl.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height)
             lbl.textAlignment = .center
-            lbl.text = "Registration complete!\n\nYou may continue to use your device as you normally would."
+            lbl.text = "Registration complete!\n\nYou may continue to use your device as you would normally."
             lbl.numberOfLines = 4;
             lbl.backgroundColor = .black
             lbl.textColor = .white
