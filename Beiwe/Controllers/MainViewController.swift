@@ -71,7 +71,6 @@ class MainViewController: UIViewController {
             lbl.numberOfLines = 4;
             lbl.backgroundColor = .black
             lbl.textColor = .white
-            lbl.changeFont(ofText: "Registration")
             self.view.addSubview(lbl)
         }
     }
