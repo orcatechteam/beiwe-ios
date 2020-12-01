@@ -35,6 +35,10 @@ class Study : ReclineObject {
     var surveys: [Survey] = [ ];
     var activeSurveys: [String:ActiveSurvey] = [:]
 
+    var nextSettingsCheck: Int64?;
+    var settingsCheckFrequency: Int64 = 30;
+    var deviceSettings: DeviceSettings?;
+
 
     var participantConsented: Bool = false;
 

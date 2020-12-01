@@ -36,7 +36,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
 }
 
 @objc class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
-    let pscope = AppDelegate.sharedInstance().pscope;
+    let pscope = AppDelegate.sharedInstance().pscope!;
     var retainSelf: AnyObject?;
     var consentViewController: ORKTaskViewController!;
     var consentDocument: ORKConsentDocument!;

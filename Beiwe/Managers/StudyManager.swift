@@ -97,32 +97,40 @@ class StudyManager {
         
         gpsManager!.addDataService(AppEventManager.sharedInstance)
         if (studySettings.gps && studySettings.gpsOnDurationSeconds > 0) {
+            log.info("preparing gps for data svc...")
             gpsManager!.addDataService(studySettings.gpsOnDurationSeconds, off: studySettings.gpsOffDurationSeconds, handler: gpsManager!)
         }
         if (studySettings.accelerometer && studySettings.gpsOnDurationSeconds > 0) {
+            log.info("preparing accel for data svc...")
             gpsManager!.addDataService(studySettings.accelerometerOnDurationSeconds, off: studySettings.accelerometerOffDurationSeconds, handler: AccelerometerManager());
         }
         if (studySettings.powerState) {
+            log.info("preparing power state for data svc...")
             gpsManager!.addDataService(PowerStateManager());
         }
 
         if (studySettings.proximity) {
+            log.info("preparing proximity for data svc...")
             gpsManager!.addDataService(ProximityManager());
         }
 
         if (studySettings.reachability) {
+            log.info("preparing reachability for data svc...")
             gpsManager!.addDataService(ReachabilityManager());
         }
 
         if (studySettings.gyro) {
+            log.info("preparing gyro for data svc...")
             gpsManager!.addDataService(studySettings.gyroOnDurationSeconds, off: studySettings.gyroOffDurationSeconds, handler: GyroManager());
         }
 
         if (studySettings.magnetometer && studySettings.magnetometerOnDurationSeconds > 0) {
+            log.info("preparing magnetometer for data svc...")
             gpsManager!.addDataService(studySettings.magnetometerOnDurationSeconds, off: studySettings.magnetometerOffDurationSeconds, handler: MagnetometerManager());
         }
 
         if (studySettings.motion && studySettings.motionOnDurationSeconds > 0) {
+            log.info("preparing motion for data svc...")
             gpsManager!.addDataService(studySettings.motionOnDurationSeconds, off: studySettings.motionOffDurationSeconds, handler: DeviceMotionManager());
         }
 
@@ -137,6 +145,7 @@ class StudyManager {
         let currentTime: Int64 = Int64(Date().timeIntervalSince1970);
         study.nextUploadCheck = currentTime + Int64(studySettings.uploadDataFileFrequencySeconds);
         study.nextSurveyCheck = currentTime + Int64(studySettings.checkForNewSurveysFreqSeconds);
+        study.nextSettingsCheck = currentTime + Int64(study.settingsCheckFrequency);
 
         study.participantConsented = true;
         DataStorageManager.sharedInstance.setCurrentStudy(study, secKeyRef: keyRef)
@@ -252,9 +261,20 @@ class StudyManager {
         let currentTime: Int64 = Int64(Date().timeIntervalSince1970);
         let nextSurvey = currentStudy.nextSurveyCheck ?? 0;
         let nextUpload = currentStudy.nextUploadCheck ?? 0;
+        let nextSettings = currentStudy.nextSettingsCheck ?? 0;
         
         log.info("CurrentTime " + currentTime.description + ", NextUpload: " + nextUpload.description)
-        
+
+        if (currentTime > nextSettings) {
+            self.setNextSettingsTime().done { _ in
+                if (reachable) {
+                    _ = self.checkSettings();
+                }
+            }.catch { _ in
+                log.error("Error checking for surveys");
+            }
+        }
+
         if (currentTime > nextSurvey || (reachable && currentStudy.missedSurveyCheck)) {
             /* This will be saved because setNextUpload saves the study */
             currentStudy.missedSurveyCheck = !reachable
@@ -534,12 +554,65 @@ class StudyManager {
 
     }
 
+    func checkSettings() -> Promise<Bool> {
+        guard let study = currentStudy, let _ = study.studySettings else {
+            return Promise.value(false);
+        }
+        log.info("Checking settings...");
+        return Recline.shared.save(study).then { _ -> Promise<(DeviceSettings, Int)> in
+            let settingsRequest = GetSettingsRequest();
+            return ApiManager.sharedInstance.makePostRequest(settingsRequest);
+        }.then { (deviceSettings, _) -> Promise<Void> in
+            log.info("deviceSettings: \(deviceSettings)");
+            study.deviceSettings = deviceSettings;
+            if (deviceSettings.accelerometer != study.studySettings?.accelerometer) {
+                log.info("StudyMgr.checkSettings//accelerometer changed from `\(study.studySettings?.accelerometer)` to `\(deviceSettings.accelerometer)`")
+                study.studySettings?.accelerometer = deviceSettings.accelerometer;
+            }
+            if (deviceSettings.motion != study.studySettings?.motion) {
+                log.info("StudyMgr.checkSettings//motion changed from `\(study.studySettings?.motion)` to `\(deviceSettings.motion)`")
+                study.studySettings?.motion = deviceSettings.motion
+            }
+            if (deviceSettings.gps != study.studySettings?.gps) {
+                // WARNING: Be careful if gps is flipped to false. The timers rely on gps being TRUE so it will cause the periodic checks to fail
+                log.info("StudyMgr.checkSettings//gps changed from `\(study.studySettings?.gps)` to `\(deviceSettings.gps)`")
+                study.studySettings?.gps = deviceSettings.gps
+            }
+            if (deviceSettings.gyro != study.studySettings?.gyro) {
+                log.info("StudyMgr.checkSettings//gyro changed from `\(study.studySettings?.gyro)` to `\(deviceSettings.gyro)`")
+                study.studySettings?.gyro = deviceSettings.gyro
+            }
+            if (deviceSettings.magnetometer != study.studySettings?.magnetometer) {
+                log.info("StudyMgr.checkSettings//magnetometer changed from `\(study.studySettings?.magnetometer)` to `\(deviceSettings.magnetometer)`")
+                study.studySettings?.magnetometer = deviceSettings.magnetometer
+            }
+            if (deviceSettings.powerState != study.studySettings?.powerState) {
+                log.info("StudyMgr.checkSettings//powerState changed from `\(study.studySettings?.powerState)` to `\(deviceSettings.powerState)`")
+                study.studySettings?.powerState = deviceSettings.powerState
+            }
+            if (deviceSettings.proximity != study.studySettings?.proximity) {
+                log.info("StudyMgr.checkSettings//proximity changed from `\(study.studySettings?.proximity)` to `\(deviceSettings.proximity)`")
+                study.studySettings?.proximity = deviceSettings.proximity
+            }
+            if (deviceSettings.reachability != study.studySettings?.reachability) {
+                log.info("StudyMgr.checkSettings//reachability changed from `\(study.studySettings?.reachability)` to `\(deviceSettings.reachability)`")
+                study.studySettings?.reachability = deviceSettings.reachability
+            }
+            return Recline.shared.save(study).asVoid();
+        }.then { _ -> Promise<Bool> in
+            _ = self.setNextSettingsTime()
+            return Promise.value(true);
+        }.recover { _ -> Promise<Bool> in
+            return Promise.value(false);
+        }
+    }
+
     func setNextUploadTime() -> Promise<Bool> {
         guard let study = currentStudy, let studySettings = study.studySettings else {
             return Promise.value(true);
         }
 
-        study.nextUploadCheck = Int64(Date().timeIntervalSince1970) + Int64(60) // Int64(studySettings.uploadDataFileFrequencySeconds);
+        study.nextUploadCheck = Int64(Date().timeIntervalSince1970) + Int64(studySettings.uploadDataFileFrequencySeconds);
         return Recline.shared.save(study).then { _ -> Promise<Bool> in
             return Promise.value(true);
         }
@@ -554,7 +627,17 @@ class StudyManager {
         return Recline.shared.save(study).then { _ -> Promise<Bool> in
             return Promise.value(true);
         }
+    }
 
+    func setNextSettingsTime() -> Promise<Bool> {
+        guard let study = currentStudy, let studySettings = study.studySettings else {
+            return Promise.value(true);
+        }
+
+        study.nextSettingsCheck = Int64(Date().timeIntervalSince1970) + Int64(study.settingsCheckFrequency);
+        return Recline.shared.save(study).then { _ -> Promise<Bool> in
+            return Promise.value(true);
+        }
     }
 
     func parseFilename(_ filename: String) -> (type: String, timestamp: Int64, ext: String){
