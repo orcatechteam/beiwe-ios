@@ -13,7 +13,6 @@ import PromiseKit
 import CoreMotion;
 import ReachabilitySwift
 import ResearchKit;
-import PermissionScope
 import XCGLogger
 import EmitterKit
 
@@ -30,7 +29,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var currentRootView: String? = "launchScreen";
     var isLoggedIn: Bool = false;
     var timeEnteredBackground: Date?;
-    var pscope: PermissionScope?;
     var canOpenTel = false;
     let debugEnabled  = _isDebugAssertConfiguration();
     let lockEvent = Event<Bool>()
@@ -42,7 +40,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         AppEventManager.sharedInstance.didLaunch(launchOptions: launchOptions);
 
-        self.setupPermissions();
         self.setupReachability();
         self.setModelVersionID();
         self.checkTelephony();
@@ -101,17 +98,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             win.makeKeyAndVisible()
         }
     }
-    
-    func setupPermissions(){
-        self.pscope = PermissionScope(backgroundTapCancels: true)
-        if let scope = pscope {
-            scope.addPermission(NotificationsPermission(notificationCategories: nil), message: "Allows Beiwe to send you survey notifications.")
-            scope.addPermission(LocationAlwaysPermission(), message: "Beiwe needs this for the data gathering capabilities of the application.")
-            scope.headerLabel.text = ""
-            scope.bodyLabel.text = "Beiwe needs access to your location and notifications.";
-        }
-    }
-    
+
     func setupLogging(){
         // Override point for customization after application launch.
         Fabric.with([Crashlytics.self])

@@ -8,8 +8,7 @@
 
 import Foundation
 import ResearchKit
-import PermissionScope
-
+import Permission
 
 enum StepIds : String {
     case Permission = "PermissionsStep"
@@ -36,7 +35,6 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
 }
 
 @objc class ConsentManager : NSObject, ORKTaskViewControllerDelegate {
-    let pscope = AppDelegate.sharedInstance().pscope!;
     var retainSelf: AnyObject?;
     var consentViewController: ORKTaskViewController!;
     var consentDocument: ORKConsentDocument!;
@@ -55,7 +53,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
         return instructionStep;
     }
 
-
+    var permissionStatus: [PermissionStatus] = []
 
     override init() {
         super.init();
@@ -127,7 +125,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
 
         let task = ORKNavigableOrderedTask(identifier: "ConsentTask", steps: steps)
         task.setNavigationRule(WaitForPermissionsRule() { [weak self] taskResult -> String in
-            if (self?.pscope.statusLocationAlways() == .authorized) {
+            if (Permission.locationAlways.status == .authorized) {
                 return StepIds.VisualConsent.rawValue
             } else {
                 return StepIds.WarningStep.rawValue
@@ -146,7 +144,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
     }
 
     func hasRequiredPermissions() -> Bool {
-        return (pscope.statusNotifications() == .authorized && pscope.statusLocationAlways() == .authorized);
+        (Permission.notifications.status == .authorized && Permission.locationAlways.status == .authorized)
     }
 
     /* ORK Delegates */
@@ -194,19 +192,18 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
         if let identifier = StepIds(rawValue: stepViewController.step?.identifier ?? "") {
             switch(identifier) {
             case .WaitForPermissions:
-                pscope.show({ finished, results in
-                    log.info("Permissions granted");
-                    if (self.hasRequiredPermissions()) {
-                        stepViewController.goForward();
-                    }
-                }, cancelled: { (results) in
-                    log.info("Permissions cancelled");
-                    stepViewController.goForward();
+                Permission.notifications.request({ status in
+                    self.permissionStatus.append(status)
+                    self.handlePermissionSet(stepViewController: stepViewController)
+                })
+                Permission.locationAlways.request({ status in
+                    self.permissionStatus.append(status)
+                    self.handlePermissionSet(stepViewController: stepViewController)
                 })
             case .Permission:
                 stepViewController.continueButtonTitle = "Permissions";
             case .WarningStep:
-                if (pscope.statusLocationAlways() == .authorized) {
+                if Permission.locationAlways.status == .authorized {
                     stepViewController.goForward();
                 } else {
                     stepViewController.continueButtonTitle = "Continue";
@@ -217,6 +214,12 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
                 }
             default: break;
             }
+        }
+    }
+
+    func handlePermissionSet(stepViewController: ORKStepViewController) {
+        if permissionStatus.count >= 2 {
+            stepViewController.goForward()
         }
     }
 }

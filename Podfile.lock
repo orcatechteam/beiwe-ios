@@ -15,8 +15,13 @@ PODS:
     - ObjcExceptionBridging/ObjcExceptionBridging (= 1.0.1)
   - ObjcExceptionBridging/ObjcExceptionBridging (1.0.1)
   - ObjectMapper (3.5.0)
+  - Permission/Core (3.1.2)
+  - Permission/Location (3.1.2):
+    - Permission/Core
+  - Permission/Notifications (3.1.2):
+    - Permission/Core
   - PermissionScope (1.1.1)
-  - PKHUD (4.2.3)
+  - PKHUD (5.4.0)
   - PromiseKit (6.11.0):
     - PromiseKit/CorePromise (= 6.11.0)
     - PromiseKit/Foundation (= 6.11.0)
@@ -47,14 +52,16 @@ DEPENDENCIES:
   - IDZSwiftCommonCrypto (~> 0.9)
   - KeychainSwift (~> 8.0)
   - ObjectMapper (from `https://github.com/Hearst-DD/ObjectMapper.git`, branch `master`)
+  - Permission/Location
+  - Permission/Notifications
   - PermissionScope (from `https://github.com/RocketFarm/PermissionScope.git`, branch `master`)
-  - PKHUD (from `https://github.com/pkluz/PKHUD.git`, branch `swift4`)
+  - PKHUD (from `https://github.com/pkluz/PKHUD.git`)
   - PromiseKit
   - ReachabilitySwift (~> 3)
   - ResearchKit
   - SwiftValidator (from `https://github.com/jpotts18/SwiftValidator.git`, branch `master`)
   - XCGLogger (~> 7.0.0)
-  - XLActionController (~> 5.0.1)
+  - XLActionController
 
 SPEC REPOS:
   trunk:
@@ -67,6 +74,7 @@ SPEC REPOS:
     - IDZSwiftCommonCrypto
     - KeychainSwift
     - ObjcExceptionBridging
+    - Permission
     - PromiseKit
     - ReachabilitySwift
     - ResearchKit
@@ -84,7 +92,6 @@ EXTERNAL SOURCES:
     :branch: master
     :git: https://github.com/RocketFarm/PermissionScope.git
   PKHUD:
-    :branch: swift4
     :git: https://github.com/pkluz/PKHUD.git
   SwiftValidator:
     :branch: master
@@ -101,7 +108,7 @@ CHECKOUT OPTIONS:
     :commit: fa44f6ad2d75c6320e3530300f79ce0254f189e2
     :git: https://github.com/RocketFarm/PermissionScope.git
   PKHUD:
-    :commit: 4d8fbf70ae912dd72280cde0a5c1440ada9a7306
+    :commit: 8fd26f23057c6bebd6695524b1c3e05e93aba571
     :git: https://github.com/pkluz/PKHUD.git
   SwiftValidator:
     :commit: d370353b7a0ce758a53b189c81e485dcd53c99a4
@@ -110,17 +117,18 @@ CHECKOUT OPTIONS:
 SPEC CHECKSUMS:
   Alamofire: afc3e7c6db61476cb45cdd23fed06bad03bbc321
   couchbase-lite-ios: 6b586fca2c8a59c85e31df89a2528c92c40fc4dc
-  Crashlytics: 540b7e5f5da5a042647227a5e3ac51d85eed06df
+  Crashlytics: 9220f5bc89e7a618df411b4f639389dbfb0e03d2
   EmitterKit: e7a27b37118823d8ad413b8396f75e40d59f8cba
   Eureka: b88fb930e42c79f8c03c373d0fcdc28c1d6c50ed
-  Fabric: 706c8b8098fff96c33c0db69cbf81f9c551d0d74
+  Fabric: ea977e3cd9c20425516d3dafd3bf8c941c51223f
   Hakuba: bc5a0422290d086c33a6424a26dd58c1a1136e94
   IDZSwiftCommonCrypto: 00dd37cdfbd149312a7e5a582cf9909f8b129f44
   KeychainSwift: be9554c0e5f4b1686c775930dc5c6bd9396992ed
   ObjcExceptionBridging: c30e00eb3700467e695faeea30e26e18bd445001
   ObjectMapper: 078b564ed25c6578b62588e306bf1da3924636d4
+  Permission: 4821359fb4d4367fb59aa16df38fbba5722ac842
   PermissionScope: a30c16e015779ba27c97c124e7539e27b5829de2
-  PKHUD: 351011b853e6b942e7ee8ad335864cc84c787241
+  PKHUD: 026ee10894f7d983cdb585138523a2ae098e4424
   PromiseKit: e4863d06976e7dee5e41c04fc7371c16b3600292
   ReachabilitySwift: f5b9bb30a0777fac8f09ce8b067e32faeb29bb64
   ResearchKit: a5770681dd61afddd3d1f24d232b9abf00cba454
@@ -128,6 +136,6 @@ SPEC CHECKSUMS:
   XCGLogger: 0434f15e3909cdc450bb63faf638b8792ab782ab
   XLActionController: f1f2226d2c6629db197d4a41f2da907085a4cb9d
 
-PODFILE CHECKSUM: 7e830611ce5b400c70fb31bc7ec83c95e7b90023
+PODFILE CHECKSUM: a33286935b19611fa2d1e96b8f297f184f112e38
 
-COCOAPODS: 1.8.1
+COCOAPODS: 1.10.0
