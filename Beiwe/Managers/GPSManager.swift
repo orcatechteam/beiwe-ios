@@ -73,11 +73,14 @@ class GPSManager : NSObject, CLLocationManagerDelegate, DataServiceProtocol {
             return false;
         }
 
+        return startTimer();
+
+    }
+
+    func startTimer() -> Bool {
         areServicesRunning = true
         startPollTimer(1.0)
-
-        return true;
-
+        return true
     }
 
     func stopAndClear() -> Promise<Void> {

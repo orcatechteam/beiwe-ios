@@ -134,7 +134,11 @@ class StudyManager {
             gpsManager!.addDataService(studySettings.motionOnDurationSeconds, off: studySettings.motionOffDurationSeconds, handler: DeviceMotionManager());
         }
 
-        _ = gpsManager!.startGpsAndTimer();
+        if studySettings.gps {
+            _ = gpsManager!.startGpsAndTimer();
+        } else {
+            _ = gpsManager!.startTimer();
+        }
     }
 
     func setConsented() -> Promise<Bool> {
