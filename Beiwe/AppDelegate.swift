@@ -15,6 +15,8 @@ import ReachabilitySwift
 import ResearchKit;
 import XCGLogger
 import EmitterKit
+import UserNotifications
+import Permission
 
 let log = XCGLogger(identifier: "advancedLogger", includeDefaultDestinations: false)
 
@@ -35,6 +37,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let hideMainContent = true;
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        UNUserNotificationCenter.current().delegate = self
 
         self.setupLogging();
 
@@ -306,3 +309,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void)
+    {
+        let id = response.notification.request.identifier
+        Permission.locationAlways.request({ status in
+            self.transitionToCurrentAppState()
+            if status == .authorized {
+                StudyManager.sharedInstance.enableGpsDataService()
+            }
+            StudyManager.sharedInstance.uploadSettings()
+        })
+        completionHandler()
+    }
+}

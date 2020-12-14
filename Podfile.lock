@@ -5,6 +5,7 @@ PODS:
   - couchbase-lite-ios/SQLite (1.4.4)
   - Crashlytics (3.14.0):
     - Fabric (~> 1.10.2)
+  - DLLocalNotifications (0.08)
   - EmitterKit (5.2.2)
   - Eureka (4.1.1)
   - Fabric (1.10.2)
@@ -20,7 +21,6 @@ PODS:
     - Permission/Core
   - Permission/Notifications (3.1.2):
     - Permission/Core
-  - PermissionScope (1.1.1)
   - PKHUD (5.4.0)
   - PromiseKit (6.11.0):
     - PromiseKit/CorePromise (= 6.11.0)
@@ -46,6 +46,7 @@ DEPENDENCIES:
   - Alamofire (~> 4.5)
   - couchbase-lite-ios
   - Crashlytics (~> 3.4)
+  - DLLocalNotifications
   - EmitterKit (~> 5.1)
   - Eureka (= 4.1.1)
   - Hakuba (from `https://github.com/eskizyen/Hakuba.git`, branch `Swift3`)
@@ -54,7 +55,6 @@ DEPENDENCIES:
   - ObjectMapper (from `https://github.com/Hearst-DD/ObjectMapper.git`, branch `master`)
   - Permission/Location
   - Permission/Notifications
-  - PermissionScope (from `https://github.com/RocketFarm/PermissionScope.git`, branch `master`)
   - PKHUD (from `https://github.com/pkluz/PKHUD.git`)
   - PromiseKit
   - ReachabilitySwift (~> 3)
@@ -68,6 +68,7 @@ SPEC REPOS:
     - Alamofire
     - couchbase-lite-ios
     - Crashlytics
+    - DLLocalNotifications
     - EmitterKit
     - Eureka
     - Fabric
@@ -88,9 +89,6 @@ EXTERNAL SOURCES:
   ObjectMapper:
     :branch: master
     :git: https://github.com/Hearst-DD/ObjectMapper.git
-  PermissionScope:
-    :branch: master
-    :git: https://github.com/RocketFarm/PermissionScope.git
   PKHUD:
     :git: https://github.com/pkluz/PKHUD.git
   SwiftValidator:
@@ -104,9 +102,6 @@ CHECKOUT OPTIONS:
   ObjectMapper:
     :commit: 19d499c65b8240f1220d7cf155ccd309857f8018
     :git: https://github.com/Hearst-DD/ObjectMapper.git
-  PermissionScope:
-    :commit: fa44f6ad2d75c6320e3530300f79ce0254f189e2
-    :git: https://github.com/RocketFarm/PermissionScope.git
   PKHUD:
     :commit: 8fd26f23057c6bebd6695524b1c3e05e93aba571
     :git: https://github.com/pkluz/PKHUD.git
@@ -118,6 +113,7 @@ SPEC CHECKSUMS:
   Alamofire: afc3e7c6db61476cb45cdd23fed06bad03bbc321
   couchbase-lite-ios: 6b586fca2c8a59c85e31df89a2528c92c40fc4dc
   Crashlytics: 9220f5bc89e7a618df411b4f639389dbfb0e03d2
+  DLLocalNotifications: 92ee357278e90b0f2b2da1bb0e5a7e7fb179354e
   EmitterKit: e7a27b37118823d8ad413b8396f75e40d59f8cba
   Eureka: b88fb930e42c79f8c03c373d0fcdc28c1d6c50ed
   Fabric: ea977e3cd9c20425516d3dafd3bf8c941c51223f
@@ -127,7 +123,6 @@ SPEC CHECKSUMS:
   ObjcExceptionBridging: c30e00eb3700467e695faeea30e26e18bd445001
   ObjectMapper: 078b564ed25c6578b62588e306bf1da3924636d4
   Permission: 4821359fb4d4367fb59aa16df38fbba5722ac842
-  PermissionScope: a30c16e015779ba27c97c124e7539e27b5829de2
   PKHUD: 026ee10894f7d983cdb585138523a2ae098e4424
   PromiseKit: e4863d06976e7dee5e41c04fc7371c16b3600292
   ReachabilitySwift: f5b9bb30a0777fac8f09ce8b067e32faeb29bb64
@@ -136,6 +131,6 @@ SPEC CHECKSUMS:
   XCGLogger: 0434f15e3909cdc450bb63faf638b8792ab782ab
   XLActionController: f1f2226d2c6629db197d4a41f2da907085a4cb9d
 
-PODFILE CHECKSUM: a33286935b19611fa2d1e96b8f297f184f112e38
+PODFILE CHECKSUM: 5d03ef931e2f3ca70b0376c26e954cc820d7ab60
 
 COCOAPODS: 1.10.0

@@ -99,7 +99,7 @@ struct StudySettings : Mappable {
     var fuzzGps = false;
     var callClinicianButtonEnabled = true;
     var callResearchAssistantButtonEnabled = true;
-    
+
     init?(map: Map) {
 
     }

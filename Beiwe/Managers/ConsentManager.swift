@@ -42,7 +42,12 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
     var PermissionsStep: ORKStep {
         let instructionStep = ORKInstructionStep(identifier: StepIds.Permission.rawValue)
         instructionStep.title = "Permissions";
-        instructionStep.text = "Beiwe needs access to your location for the passive data gathering capabilities of this app. Beiwe will also send you notifications to notify you of new surveys.";
+        let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps ?? false
+        if gpsNeeded {
+            instructionStep.text = "Beiwe needs access to your location for the passive data gathering capabilities of this app. Beiwe will also send you notifications to notify you of new surveys.";
+        } else {
+            instructionStep.text = "Beiwe needs permission to send you notifications to notify you of new surveys or updates.";
+        }
         return instructionStep;
     }
 
@@ -54,6 +59,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
     }
 
     var permissionStatus: [PermissionStatus] = []
+    var expectedPermissionCount: Int = 0
 
     override init() {
         super.init();
@@ -64,7 +70,10 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
         if (!hasRequiredPermissions()) {
             steps += [PermissionsStep];
             steps += [ORKWaitStep(identifier: StepIds.WaitForPermissions.rawValue)];
-            steps += [WarningStep];
+            let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps ?? false
+            if gpsNeeded {
+                steps += [WarningStep];
+            }
         }
 
         consentDocument = ORKConsentDocument()
@@ -192,21 +201,31 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
         if let identifier = StepIds(rawValue: stepViewController.step?.identifier ?? "") {
             switch(identifier) {
             case .WaitForPermissions:
+                self.expectedPermissionCount = 1
                 Permission.notifications.request({ status in
                     self.permissionStatus.append(status)
                     self.handlePermissionSet(stepViewController: stepViewController)
                 })
-                Permission.locationAlways.request({ status in
-                    self.permissionStatus.append(status)
-                    self.handlePermissionSet(stepViewController: stepViewController)
-                })
+                let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps ?? false
+                if gpsNeeded {
+                    Permission.locationAlways.request({ status in
+                        self.permissionStatus.append(status)
+                        self.handlePermissionSet(stepViewController: stepViewController)
+                    })
+                    self.expectedPermissionCount = 2
+                }
             case .Permission:
-                stepViewController.continueButtonTitle = "Permissions";
+                stepViewController.continueButtonTitle = "Continue";
             case .WarningStep:
-                if Permission.locationAlways.status == .authorized {
+                let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps ?? false
+                if !gpsNeeded {
                     stepViewController.goForward();
                 } else {
-                    stepViewController.continueButtonTitle = "Continue";
+                    if Permission.locationAlways.status == .authorized {
+                        stepViewController.goForward();
+                    } else {
+                        stepViewController.continueButtonTitle = "Continue";
+                    }
                 }
             case .VisualConsent:
                 if (hasRequiredPermissions()) {
@@ -218,7 +237,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
     }
 
     func handlePermissionSet(stepViewController: ORKStepViewController) {
-        if permissionStatus.count >= 2 {
+        if permissionStatus.count >= expectedPermissionCount {
             stepViewController.goForward()
         }
     }

@@ -6,10 +6,16 @@
 import Foundation
 import ObjectMapper;
 
+enum DevicePermission: String {
+    case requested = "requested"
+    case denied = "denied"
+    case enabled = "enabled"
+    case disabled = "disabled"
+}
+
 struct DeviceSettings : Mappable {
 
     var checkForNewSettingsFreqSeconds = 60; // 21600;
-
     var accelerometer  = false;
     var calls = false;
     var gps = false;
@@ -23,24 +29,27 @@ struct DeviceSettings : Mappable {
     var reachability = false;
     var texts = false;
 
-    init?(map: Map) {
+    var gpsPermission: DevicePermission = .requested
 
+    init?(map: Map) {
     }
 
     // Mappable
     mutating func mapping(map: Map) {
-        accelerometer                   <- map["device_settings.accelerometer"];
-        bluetooth                       <- map["device_settings.bluetooth"]
-        calls                           <- map["device_settings.calls"]
-        gps                             <- map["device_settings.gps"]
-        powerState                      <- map["device_settings.power_state"]
-        texts                           <- map["device_settings.texts"]
-        wifi                            <- map["device_settings.wifi"]
-        proximity                       <- map["device_settings.proximity"];
-        magnetometer                    <- map["device_settings.magnetometer"];
-        gyro                           <- map["device_settings.gyro"];
-        motion                         <- map["device_settings.devicemotion"];
-        reachability                   <- map["device_settings.reachability"];
+        accelerometer <- map["device_settings.accelerometer"]
+        bluetooth     <- map["device_settings.bluetooth"]
+        calls         <- map["device_settings.calls"]
+        gps           <- map["device_settings.gps"]
+        powerState    <- map["device_settings.power_state"]
+        texts         <- map["device_settings.texts"]
+        wifi          <- map["device_settings.wifi"]
+        proximity     <- map["device_settings.proximity"]
+        magnetometer  <- map["device_settings.magnetometer"]
+        gyro          <- map["device_settings.gyro"]
+        motion        <- map["device_settings.devicemotion"]
+        reachability  <- map["device_settings.reachability"]
+
+        gpsPermission <- map["device_settings.gps_permission"]
     }
 
 }

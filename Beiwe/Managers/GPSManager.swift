@@ -12,6 +12,7 @@ import Darwin
 import PromiseKit
 
 protocol DataServiceProtocol {
+    var storeType: String { get };
     func initCollecting() -> Bool;
     func startCollecting();
     func pauseCollecting();
@@ -48,6 +49,7 @@ class GPSManager : NSObject, CLLocationManagerDelegate, DataServiceProtocol {
     var enableGpsFuzzing: Bool = false;
     var fuzzGpsLatitudeOffset: Double = 0.0;
     var fuzzGpsLongitudeOffset: Double = 0.0;
+    let storeType = "GPS";
 
     func gpsAllowed() -> Bool {
         return CLLocationManager.locationServicesEnabled() &&  CLLocationManager.authorizationStatus() == .authorizedAlways;
@@ -242,14 +244,14 @@ class GPSManager : NSObject, CLLocationManagerDelegate, DataServiceProtocol {
         return true;
     }
     func startCollecting() {
-        log.info("Turning GPS collection on");
+        log.info("Turning \(storeType) collection on");
         AppEventManager.sharedInstance.logAppEvent(event: "gps_on", msg: "GPS collection on")
         isCollectingGps = true;
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = kCLDistanceFilterNone;
     }
     func pauseCollecting() {
-        log.info("Pausing GPS collection");
+        log.info("Pausing \(storeType) collection");
         AppEventManager.sharedInstance.logAppEvent(event: "gps_off", msg: "GPS collection off")
         isCollectingGps = false;
         locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers

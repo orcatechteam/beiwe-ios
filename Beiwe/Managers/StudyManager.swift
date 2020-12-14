@@ -11,6 +11,7 @@ import PromiseKit
 import ReachabilitySwift
 import EmitterKit
 import Crashlytics
+import DLLocalNotifications
 
 class StudyManager {
     static let sharedInstance = StudyManager();
@@ -76,6 +77,20 @@ class StudyManager {
         self.prepareDataServices();
         NotificationCenter.default.addObserver(self, selector: #selector(self.reachabilityChanged), name: ReachabilityChangedNotification, object: nil)
 
+    }
+
+    func enableGpsDataService() {
+        guard let studySettings = currentStudy?.studySettings else {
+            return;
+        }
+        log.info("StudyMgr.enableGpsDataService")
+        gpsManager = GPSManager();
+        log.info("gpsAllowed: \(gpsManager?.gpsAllowed())")
+        if (studySettings.gps && studySettings.gpsOnDurationSeconds > 0) {
+            log.info("preparing gps for data svc...")
+            gpsManager!.addDataService(studySettings.gpsOnDurationSeconds, off: studySettings.gpsOffDurationSeconds, handler: gpsManager!)
+            _ = gpsManager!.startGpsAndTimer();
+        }
     }
 
     func prepareDataServices() {
@@ -558,6 +573,17 @@ class StudyManager {
 
     }
 
+    func logSettings() -> Promise<Bool> {
+        guard let study = currentStudy, let studySettings = study.studySettings else {
+            return Promise.value(false)
+        }
+        let deviceSettings = study.deviceSettings
+        log.info("Logging settings...")
+        log.info("study.studySettings: `\(studySettings.toJSONString())`")
+        log.info("deviceSettings.gpsPermission: `\(deviceSettings?.gpsPermission)`")
+        return Promise.value(true)
+    }
+
     func checkSettings() -> Promise<Bool> {
         guard let study = currentStudy, let _ = study.studySettings else {
             return Promise.value(false);
@@ -567,8 +593,12 @@ class StudyManager {
             let settingsRequest = GetSettingsRequest();
             return ApiManager.sharedInstance.makePostRequest(settingsRequest);
         }.then { (deviceSettings, _) -> Promise<Void> in
+            log.info("DevicePerm(rawValue: disabled): `\(DevicePermission(rawValue: "disabled"))`")
             log.info("deviceSettings: \(deviceSettings)");
+            log.info("study.deviceSettings?.gpsPermission: `\(study.deviceSettings?.gpsPermission)`")
+            log.info("deviceSettings.gpsPermission: `\(deviceSettings.gpsPermission)`")
             study.deviceSettings = deviceSettings;
+            log.info("study.deviceSettings?.gpsPermission: `\(study.deviceSettings?.gpsPermission)`")
             if (deviceSettings.accelerometer != study.studySettings?.accelerometer) {
                 log.info("StudyMgr.checkSettings//accelerometer changed from `\(study.studySettings?.accelerometer)` to `\(deviceSettings.accelerometer)`")
                 study.studySettings?.accelerometer = deviceSettings.accelerometer;
@@ -581,6 +611,11 @@ class StudyManager {
                 // WARNING: Be careful if gps is flipped to false. The timers rely on gps being TRUE so it will cause the periodic checks to fail
                 log.info("StudyMgr.checkSettings//gps changed from `\(study.studySettings?.gps)` to `\(deviceSettings.gps)`")
                 study.studySettings?.gps = deviceSettings.gps
+                // @TODO [~] Handle the GPS perm flip from false to true
+                if deviceSettings.gps == true && study.studySettings?.gps == false {
+                    // @TODO [~] OS local notification
+                    self.handleSettingsUpdateNotification()
+                }
             }
             if (deviceSettings.gyro != study.studySettings?.gyro) {
                 log.info("StudyMgr.checkSettings//gyro changed from `\(study.studySettings?.gyro)` to `\(deviceSettings.gyro)`")
@@ -604,11 +639,44 @@ class StudyManager {
             }
             return Recline.shared.save(study).asVoid();
         }.then { _ -> Promise<Bool> in
+            self.handleSettingsUpdateNotification()
             _ = self.setNextSettingsTime()
+            _ = self.uploadSettings()
             return Promise.value(true);
         }.recover { _ -> Promise<Bool> in
             return Promise.value(false);
         }
+    }
+
+    func uploadSettings() {
+        // iOS data stream: accelerometer, device motion, gps, gyro, magnetometer, power state, proximity, reachability
+        // @TODO [X] Get device settings...
+        guard let study = currentStudy, let _ = study.studySettings else {
+            return;
+        }
+        // since the user is only prompted for gps & notification permissions, we only need to
+        // check gps perm on upload to see if it has changed
+        gpsManager = GPSManager();
+        let gpsAllowed = gpsManager?.gpsAllowed()
+        // @TODO [X] send it to /upload_settings/ios
+        var deviceSettings = study.deviceSettings
+        deviceSettings?.gps = gpsAllowed ?? false
+        let settingsToUpload = deviceSettings?.toJSONString() ?? ""
+        log.info("StudyMgr.uploadSettings()//settingsToUpload: `\(settingsToUpload)`")
+        let uploadSettingsRequest = UploadSettingsRequest(settings: settingsToUpload)
+        ApiManager.sharedInstance.makePostRequest(uploadSettingsRequest).then { (response, _) -> Promise<Bool> in
+            log.info("StudyMgr.uploadSettings//response: `\(response)`")
+            return Promise.value(true)
+        }
+    }
+
+    func handleSettingsUpdateNotification() {
+        log.info("StudyMgr.handleSettingsUpdateNotification...")
+        let triggerDate = Date().addingTimeInterval(30)
+        let settingsUpdatedNotification = DLNotification(identifier: "settingsUpdatedNotification", alertTitle: "Beiwe Settings Updated", alertBody: "The settings for the Beiwe app have been updated!", date: triggerDate, repeats: .none)
+        let scheduler = DLNotificationScheduler()
+        scheduler.scheduleNotification(notification: settingsUpdatedNotification)
+        scheduler.scheduleAllNotifications()
     }
 
     func setNextUploadTime() -> Promise<Bool> {
@@ -639,6 +707,8 @@ class StudyManager {
         }
 
         study.nextSettingsCheck = Int64(Date().timeIntervalSince1970) + Int64(study.settingsCheckFrequency);
+        let inSecondsFromNow = (study.nextSettingsCheck ?? 0) - Int64(Date().timeIntervalSince1970)
+        log.info("next settings check: \(study.nextSettingsCheck), now: \(Int64(Date().timeIntervalSince1970))... in \(inSecondsFromNow) seconds")
         return Recline.shared.save(study).then { _ -> Promise<Bool> in
             return Promise.value(true);
         }

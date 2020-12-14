@@ -125,8 +125,9 @@ class MainViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
+    // To trigger the debug menu... hold down the option button in the simulator to get two touch points & tap twice
     func addDebugMenu() {
-
+        log.info("addDebugMenu...")
         let tapRecognizer = UITapGestureRecognizer.init(target: self, action: #selector(debugTap))
         tapRecognizer.numberOfTapsRequired = 2;
         tapRecognizer.numberOfTouchesRequired = 2;
@@ -145,6 +146,21 @@ class MainViewController: UIViewController {
 
         actionController.headerData = nil;
 
+        actionController.addAction(Action(ActionData(title: "Leave Study"), style: .default) { (action) in
+            DispatchQueue.main.async {
+                self.devLeaveStudy(self)
+            }
+        });
+        actionController.addAction(Action(ActionData(title: "Check Settings"), style: .default) { (action) in
+            DispatchQueue.main.async {
+                self.devCheckSettings(self)
+            }
+        });
+        actionController.addAction(Action(ActionData(title: "Log Settings"), style: .default) { (action) in
+            DispatchQueue.main.async {
+                self.devLogSettings(self)
+            }
+        });
         actionController.addAction(Action(ActionData(title: "Upload Data"), style: .default) { (action) in
             DispatchQueue.main.async {
                 self.Upload(self)
@@ -272,4 +288,21 @@ class MainViewController: UIViewController {
 
 
 
+}
+
+extension MainViewController {
+    @IBAction func devLeaveStudy(_ sender: AnyObject) {
+        _ = StudyManager.sharedInstance.leaveStudy().done { _ in
+            AppDelegate.sharedInstance().isLoggedIn = false;
+            AppDelegate.sharedInstance().transitionToCurrentAppState();
+        }
+    }
+
+    @IBAction func devCheckSettings(_ sender: AnyObject) {
+        _ = StudyManager.sharedInstance.checkSettings();
+    }
+
+    @IBAction func devLogSettings(_ sender: AnyObject) {
+        _ = StudyManager.sharedInstance.logSettings();
+    }
 }

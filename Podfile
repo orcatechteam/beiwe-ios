@@ -15,12 +15,12 @@ target 'Beiwe' do
   pod 'ResearchKit'
   pod 'ReachabilitySwift', '~>3'
   pod 'EmitterKit', '~> 5.1'
-  pod 'PermissionScope', :git => 'https://github.com/RocketFarm/PermissionScope.git', :branch => 'master'
   pod 'Hakuba', :git => 'https://github.com/eskizyen/Hakuba.git', :branch => 'Swift3'
   pod 'XLActionController'
   pod 'XCGLogger', '~> 7.0.0'
   pod 'Permission/Notifications'
   pod 'Permission/Location'
+  pod 'DLLocalNotifications'
 
 end
 
