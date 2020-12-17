@@ -6,30 +6,34 @@
 import Foundation
 import ObjectMapper;
 
+// Note that while it's related to PermissionStatus, it's not the same and it mainly deals with settings coming from the backend
 enum DevicePermission: String {
-    case requested = "requested"
-    case denied = "denied"
-    case enabled = "enabled"
-    case disabled = "disabled"
+    case requested = "requested" // initial state... also "undetermined" state
+    case denied = "denied" // when a user explicitly denies
+    case enabled = "enabled" // when a user grants the permission
+    case disabled = "disabled" // when a data stream is unused OR no longer needed
+
+    func isRequested() -> Bool { self == .requested }
+    func isDenied() -> Bool { self == .denied }
+    func isEnabled() -> Bool { self == .enabled }
+    func isDisabled() -> Bool { self == .disabled }
 }
 
 struct DeviceSettings : Mappable {
 
     var checkForNewSettingsFreqSeconds = 60; // 21600;
-    var accelerometer  = false;
-    var calls = false;
-    var gps = false;
-    var bluetooth = false;
-    var powerState = false;
-    var wifi = false;
-    var proximity = false;
-    var magnetometer = false;
-    var gyro = false;
-    var motion = false;
-    var reachability = false;
-    var texts = false;
-
-    var gpsPermission: DevicePermission = .requested
+    var accelerometer: DevicePermission = .requested
+    var calls: DevicePermission = .requested
+    var gps: DevicePermission = .requested
+    var bluetooth: DevicePermission = .requested
+    var powerState: DevicePermission = .requested
+    var wifi: DevicePermission = .requested
+    var proximity: DevicePermission = .requested
+    var magnetometer: DevicePermission = .requested
+    var gyro: DevicePermission = .requested
+    var motion: DevicePermission = .requested
+    var reachability: DevicePermission = .requested
+    var texts: DevicePermission = .requested
 
     init?(map: Map) {
     }
@@ -48,8 +52,6 @@ struct DeviceSettings : Mappable {
         gyro          <- map["device_settings.gyro"]
         motion        <- map["device_settings.devicemotion"]
         reachability  <- map["device_settings.reachability"]
-
-        gpsPermission <- map["device_settings.gps_permission"]
     }
 
 }

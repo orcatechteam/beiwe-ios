@@ -58,42 +58,43 @@ struct ConsentSection: Mappable {
 }
 struct StudySettings : Mappable {
 
+    var accelerometer: DevicePermission = .requested
+    var calls: DevicePermission = .requested
+    var gps: DevicePermission = .requested
+    var bluetooth: DevicePermission = .requested
+    var powerState: DevicePermission = .requested
+    var wifi: DevicePermission = .requested
+    var proximity: DevicePermission = .requested
+    var magnetometer: DevicePermission = .requested
+    var gyro: DevicePermission = .requested
+    var motion: DevicePermission = .requested
+    var reachability: DevicePermission = .requested
+    var texts: DevicePermission = .requested
+
     var clientPublicKey: String?;
     var aboutPageText = "";
-    var accelerometer  = false;
     var accelerometerOffDurationSeconds = 300;
     var accelerometerOnDurationSeconds = 0;
-    var bluetooth = false;
     var bluetoothGlobalOffsetSeconds = 0;
     var bluetoothOnDurationSeconds = 0;
     var bluetoothTotalDurationSeconds = 0;
     var callClinicianText = "Call My Clinician";
-    var calls = false;
     var checkForNewSurveysFreqSeconds = 21600;
     var consentFormText = "I have read and understood the information about the study and all of my questions about the study have been answered by the study researchers.";
     var createNewDataFileFrequencySeconds = 900;
-    var gps = false;
     var gpsOffDurationSeconds = 300;
     var gpsOnDurationSeconds = 0;
-    var powerState = false;
     var secondsBeforeAutoLogout = 300;
     var submitSurveySuccessText = "Thank you for completing the survey.  A clinician will not see your answers immediately, so if you need help or are thinking about harming yourself, please contact your clinician.  You can also press the \"Call My Clinician\" button.";
-    var texts = false;
     var uploadDataFileFrequencySeconds = 3600;
     var voiceRecordingMaxLengthSeconds = 300;
-    var wifi = false;
     var wifiLogFrequencySeconds = 300;
-    var proximity = false;
-    var magnetometer = false;
     var magnetometerOffDurationSeconds = 300;
     var magnetometerOnDurationSeconds = 0;
-    var gyro = false;
     var gyroOffDurationSeconds = 300;
     var gyroOnDurationSeconds = 0;
-    var motion = false;
     var motionOffDurationSeconds = 300;
     var motionOnDurationSeconds = 0;
-    var reachability = false;
     var uploadOverCellular = false;
     var consentSections: [String:ConsentSection] = [:];
     var fuzzGps = false;

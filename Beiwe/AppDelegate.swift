@@ -312,14 +312,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void)
     {
-        let id = response.notification.request.identifier
-        Permission.locationAlways.request({ status in
-            self.transitionToCurrentAppState()
-            if status == .authorized {
-                StudyManager.sharedInstance.enableGpsDataService()
-            }
-            StudyManager.sharedInstance.uploadSettings()
-        })
+        let notificationIdentifier = response.notification.request.identifier
+        if notificationIdentifier == "settingsUpdatedNotification" {
+            Permission.locationAlways.request(handleLocationPermission)
+        }
         completionHandler()
+    }
+
+    func handleLocationPermission(status: PermissionStatus) {
+        self.transitionToCurrentAppState()
+        guard let study = StudyManager.sharedInstance.currentStudy, let _ = study.studySettings else {
+            return;
+        }
+        StudyManager.sharedInstance.handleLocationPermissionStatus(status: status)
     }
 }

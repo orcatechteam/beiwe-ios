@@ -42,7 +42,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
     var PermissionsStep: ORKStep {
         let instructionStep = ORKInstructionStep(identifier: StepIds.Permission.rawValue)
         instructionStep.title = "Permissions";
-        let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps ?? false
+        let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps.isRequested() ?? false
         if gpsNeeded {
             instructionStep.text = "Beiwe needs access to your location for the passive data gathering capabilities of this app. Beiwe will also send you notifications to notify you of new surveys.";
         } else {
@@ -70,7 +70,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
         if (!hasRequiredPermissions()) {
             steps += [PermissionsStep];
             steps += [ORKWaitStep(identifier: StepIds.WaitForPermissions.rawValue)];
-            let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps ?? false
+            let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps.isRequested() ?? false
             if gpsNeeded {
                 steps += [WarningStep];
             }
@@ -203,10 +203,11 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
             case .WaitForPermissions:
                 self.expectedPermissionCount = 1
                 Permission.notifications.request({ status in
+                    // Note: this permission is device specific and does not flow to the backend
                     self.permissionStatus.append(status)
                     self.handlePermissionSet(stepViewController: stepViewController)
                 })
-                let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps ?? false
+                let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps.isRequested() ?? false
                 if gpsNeeded {
                     Permission.locationAlways.request({ status in
                         self.permissionStatus.append(status)
@@ -217,7 +218,7 @@ class WaitForPermissionsRule : ORKStepNavigationRule {
             case .Permission:
                 stepViewController.continueButtonTitle = "Continue";
             case .WarningStep:
-                let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps ?? false
+                let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps.isRequested() ?? false
                 if !gpsNeeded {
                     stepViewController.goForward();
                 } else {

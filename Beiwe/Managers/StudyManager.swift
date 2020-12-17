@@ -12,6 +12,7 @@ import ReachabilitySwift
 import EmitterKit
 import Crashlytics
 import DLLocalNotifications
+import Permission
 
 class StudyManager {
     static let sharedInstance = StudyManager();
@@ -87,6 +88,7 @@ class StudyManager {
         gpsManager = GPSManager();
         log.info("gpsAllowed: \(gpsManager?.gpsAllowed())")
         if (studySettings.gps && studySettings.gpsOnDurationSeconds > 0) {
+        if (studySettings.gps.isRequested() && studySettings.gpsOnDurationSeconds > 0) {
             log.info("preparing gps for data svc...")
             gpsManager!.addDataService(studySettings.gpsOnDurationSeconds, off: studySettings.gpsOffDurationSeconds, handler: gpsManager!)
             _ = gpsManager!.startGpsAndTimer();
@@ -94,8 +96,8 @@ class StudyManager {
     }
 
     func prepareDataServices() {
-        guard let studySettings = currentStudy?.studySettings else {
-            return;
+        guard let study = currentStudy, let studySettings = study.studySettings else {
+            return
         }
 
         log.info("prepareDataServices")
@@ -111,45 +113,62 @@ class StudyManager {
         gpsManager?.fuzzGpsLongitudeOffset = (currentStudy?.fuzzGpsLongitudeOffset)!
         
         gpsManager!.addDataService(AppEventManager.sharedInstance)
-        if (studySettings.gps && studySettings.gpsOnDurationSeconds > 0) {
+        if (studySettings.gps.isRequested() && studySettings.gpsOnDurationSeconds > 0 && gpsAllowed) {
             log.info("preparing gps for data svc...")
             gpsManager!.addDataService(studySettings.gpsOnDurationSeconds, off: studySettings.gpsOffDurationSeconds, handler: gpsManager!)
+            study.studySettings?.gps = .enabled
         }
-        if (studySettings.accelerometer && studySettings.gpsOnDurationSeconds > 0) {
+        if (studySettings.accelerometer.isRequested() && studySettings.gpsOnDurationSeconds > 0) {
             log.info("preparing accel for data svc...")
             gpsManager!.addDataService(studySettings.accelerometerOnDurationSeconds, off: studySettings.accelerometerOffDurationSeconds, handler: AccelerometerManager());
+            study.studySettings?.accelerometer = .enabled
         }
-        if (studySettings.powerState) {
+        if (studySettings.powerState.isRequested()) {
             log.info("preparing power state for data svc...")
             gpsManager!.addDataService(PowerStateManager());
+            study.studySettings?.powerState = .enabled
         }
 
-        if (studySettings.proximity) {
+        if (studySettings.proximity.isRequested()) {
             log.info("preparing proximity for data svc...")
             gpsManager!.addDataService(ProximityManager());
+            study.studySettings?.proximity = .enabled
         }
 
-        if (studySettings.reachability) {
+        if (studySettings.reachability.isRequested()) {
             log.info("preparing reachability for data svc...")
             gpsManager!.addDataService(ReachabilityManager());
+            study.studySettings?.reachability = .enabled
         }
 
-        if (studySettings.gyro) {
+        if (studySettings.gyro.isRequested()) {
             log.info("preparing gyro for data svc...")
             gpsManager!.addDataService(studySettings.gyroOnDurationSeconds, off: studySettings.gyroOffDurationSeconds, handler: GyroManager());
+            study.studySettings?.gyro = .enabled
         }
 
-        if (studySettings.magnetometer && studySettings.magnetometerOnDurationSeconds > 0) {
+        if (studySettings.magnetometer.isRequested() && studySettings.magnetometerOnDurationSeconds > 0) {
             log.info("preparing magnetometer for data svc...")
             gpsManager!.addDataService(studySettings.magnetometerOnDurationSeconds, off: studySettings.magnetometerOffDurationSeconds, handler: MagnetometerManager());
+            study.studySettings?.magnetometer = .enabled
         }
 
-        if (studySettings.motion && studySettings.motionOnDurationSeconds > 0) {
+        if (studySettings.motion.isRequested() && studySettings.motionOnDurationSeconds > 0) {
             log.info("preparing motion for data svc...")
             gpsManager!.addDataService(studySettings.motionOnDurationSeconds, off: studySettings.motionOffDurationSeconds, handler: DeviceMotionManager());
+            study.studySettings?.motion = .enabled
         }
 
-        if studySettings.gps {
+        study.studySettings?.calls = .disabled
+        study.studySettings?.texts = .disabled
+        study.studySettings?.wifi = .disabled
+        study.studySettings?.bluetooth = .disabled
+
+        Recline.shared.save(study).done { _ in
+            self.uploadSettings()
+        }
+
+        if studySettings.gps.isRequested() {
             _ = gpsManager!.startGpsAndTimer();
         } else {
             _ = gpsManager!.startTimer();
@@ -580,60 +599,62 @@ class StudyManager {
         let deviceSettings = study.deviceSettings
         log.info("Logging settings...")
         log.info("study.studySettings: `\(studySettings.toJSONString())`")
-        log.info("deviceSettings.gpsPermission: `\(deviceSettings?.gpsPermission)`")
         return Promise.value(true)
     }
 
     func checkSettings() -> Promise<Bool> {
-        guard let study = currentStudy, let _ = study.studySettings else {
+        guard let study = currentStudy, let studySettings = study.studySettings else {
             return Promise.value(false);
         }
         log.info("Checking settings...");
         return Recline.shared.save(study).then { _ -> Promise<(DeviceSettings, Int)> in
             let settingsRequest = GetSettingsRequest();
             return ApiManager.sharedInstance.makePostRequest(settingsRequest);
-        }.then { (deviceSettings, _) -> Promise<Void> in
-            log.info("DevicePerm(rawValue: disabled): `\(DevicePermission(rawValue: "disabled"))`")
+        }.then { (deviceSettings: DeviceSettings, _) -> Promise<Void> in
+//            log.info("DevicePerm(rawValue: disabled): `\(DevicePermission(rawValue: "disabled"))`")
             log.info("deviceSettings: \(deviceSettings)");
-            log.info("study.deviceSettings?.gpsPermission: `\(study.deviceSettings?.gpsPermission)`")
-            log.info("deviceSettings.gpsPermission: `\(deviceSettings.gpsPermission)`")
             study.deviceSettings = deviceSettings;
-            log.info("study.deviceSettings?.gpsPermission: `\(study.deviceSettings?.gpsPermission)`")
-            if (deviceSettings.accelerometer != study.studySettings?.accelerometer) {
+            if (deviceSettings.accelerometer != studySettings.accelerometer && studySettings.accelerometer.isDisabled()) {
                 log.info("StudyMgr.checkSettings//accelerometer changed from `\(study.studySettings?.accelerometer)` to `\(deviceSettings.accelerometer)`")
+                switch studySettings.accelerometer {
+                case .disabled:
+                    log.info("accel was disabled...")
+                case .enabled:
+                    log.info("accel was enabled...")
+                case .requested, .denied:
+                    // perm was never granted?
+                    log.info("accel was requested or denied...")
+                }
                 study.studySettings?.accelerometer = deviceSettings.accelerometer;
             }
-            if (deviceSettings.motion != study.studySettings?.motion) {
+            if (deviceSettings.motion != studySettings.motion && studySettings.motion.isDisabled()) {
                 log.info("StudyMgr.checkSettings//motion changed from `\(study.studySettings?.motion)` to `\(deviceSettings.motion)`")
                 study.studySettings?.motion = deviceSettings.motion
             }
-            if (deviceSettings.gps != study.studySettings?.gps) {
-                // WARNING: Be careful if gps is flipped to false. The timers rely on gps being TRUE so it will cause the periodic checks to fail
+            if (deviceSettings.gps != studySettings.gps && studySettings.gps.isDisabled()) {
                 log.info("StudyMgr.checkSettings//gps changed from `\(study.studySettings?.gps)` to `\(deviceSettings.gps)`")
                 study.studySettings?.gps = deviceSettings.gps
-                // @TODO [~] Handle the GPS perm flip from false to true
-                if deviceSettings.gps == true && study.studySettings?.gps == false {
-                    // @TODO [~] OS local notification
+                if deviceSettings.gps.isRequested() && studySettings.gps.isDisabled() {
                     self.handleSettingsUpdateNotification()
                 }
             }
-            if (deviceSettings.gyro != study.studySettings?.gyro) {
+            if (deviceSettings.gyro != studySettings.gyro && studySettings.gyro.isDisabled()) {
                 log.info("StudyMgr.checkSettings//gyro changed from `\(study.studySettings?.gyro)` to `\(deviceSettings.gyro)`")
                 study.studySettings?.gyro = deviceSettings.gyro
             }
-            if (deviceSettings.magnetometer != study.studySettings?.magnetometer) {
+            if (deviceSettings.magnetometer != studySettings.magnetometer && studySettings.magnetometer.isDisabled()) {
                 log.info("StudyMgr.checkSettings//magnetometer changed from `\(study.studySettings?.magnetometer)` to `\(deviceSettings.magnetometer)`")
                 study.studySettings?.magnetometer = deviceSettings.magnetometer
             }
-            if (deviceSettings.powerState != study.studySettings?.powerState) {
+            if (deviceSettings.powerState != studySettings.powerState && studySettings.powerState.isDisabled()) {
                 log.info("StudyMgr.checkSettings//powerState changed from `\(study.studySettings?.powerState)` to `\(deviceSettings.powerState)`")
                 study.studySettings?.powerState = deviceSettings.powerState
             }
-            if (deviceSettings.proximity != study.studySettings?.proximity) {
+            if (deviceSettings.proximity != studySettings.proximity && studySettings.proximity.isDisabled()) {
                 log.info("StudyMgr.checkSettings//proximity changed from `\(study.studySettings?.proximity)` to `\(deviceSettings.proximity)`")
                 study.studySettings?.proximity = deviceSettings.proximity
             }
-            if (deviceSettings.reachability != study.studySettings?.reachability) {
+            if (deviceSettings.reachability != studySettings.reachability && studySettings.reachability.isDisabled()) {
                 log.info("StudyMgr.checkSettings//reachability changed from `\(study.studySettings?.reachability)` to `\(deviceSettings.reachability)`")
                 study.studySettings?.reachability = deviceSettings.reachability
             }
@@ -649,24 +670,35 @@ class StudyManager {
     }
 
     func uploadSettings() {
-        // iOS data stream: accelerometer, device motion, gps, gyro, magnetometer, power state, proximity, reachability
-        // @TODO [X] Get device settings...
+        guard let study = currentStudy, let studySettings = study.studySettings else {
+            return;
+        }
+        let settingsToUpload = studySettings.toJSONString()
+        log.info("StudyMgr.uploadSettings()//settingsToUpload: `\(settingsToUpload)`")
+        let uploadSettingsRequest = UploadSettingsRequest(settings: settingsToUpload ?? "")
+        ApiManager.sharedInstance.makePostRequest(uploadSettingsRequest).done { (response, _) -> Void in
+            log.info("StudyMgr.uploadSettings//response: `\(response)`")
+        }
+    }
+
+    func handleLocationPermissionStatus(status: PermissionStatus) {
         guard let study = currentStudy, let _ = study.studySettings else {
             return;
         }
-        // since the user is only prompted for gps & notification permissions, we only need to
-        // check gps perm on upload to see if it has changed
-        gpsManager = GPSManager();
-        let gpsAllowed = gpsManager?.gpsAllowed()
-        // @TODO [X] send it to /upload_settings/ios
-        var deviceSettings = study.deviceSettings
-        deviceSettings?.gps = gpsAllowed ?? false
-        let settingsToUpload = deviceSettings?.toJSONString() ?? ""
-        log.info("StudyMgr.uploadSettings()//settingsToUpload: `\(settingsToUpload)`")
-        let uploadSettingsRequest = UploadSettingsRequest(settings: settingsToUpload)
-        ApiManager.sharedInstance.makePostRequest(uploadSettingsRequest).then { (response, _) -> Promise<Bool> in
-            log.info("StudyMgr.uploadSettings//response: `\(response)`")
-            return Promise.value(true)
+        switch status {
+        case .authorized:
+            self.enableGpsDataService()
+            study.deviceSettings?.gps = .enabled
+            study.studySettings?.gps = .enabled
+        case .denied:
+            study.deviceSettings?.gps = .denied
+        case .disabled:
+            study.deviceSettings?.gps = .disabled
+        case .notDetermined:
+            study.deviceSettings?.gps = .requested
+        }
+        Recline.shared.save(study).done { _ in
+            self.uploadSettings()
         }
     }
 
