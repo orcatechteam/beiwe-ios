@@ -6,11 +6,10 @@
 import Foundation
 import ObjectMapper
 
-struct GetSettingsRequest : Mappable, ApiRequest {
+struct GetSettingsRequest: Mappable, ApiRequest {
 
     static let apiEndpoint = "/download_settings/ios/"
-    typealias ApiReturnType = DeviceSettings;
-
+    typealias ApiReturnType = DeviceSettings
 
     init() {
     }

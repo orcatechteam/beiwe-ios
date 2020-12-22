@@ -21,6 +21,7 @@ target 'Beiwe' do
   pod 'Permission/Notifications'
   pod 'Permission/Location'
   pod 'DLLocalNotifications'
+  pod 'SwiftLint'
 
 end
 

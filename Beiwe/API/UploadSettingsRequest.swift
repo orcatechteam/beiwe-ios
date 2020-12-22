@@ -6,15 +6,15 @@
 import Foundation
 import ObjectMapper
 
-struct UploadSettingsRequest : Mappable, ApiRequest {
+struct UploadSettingsRequest: Mappable, ApiRequest {
 
     static let apiEndpoint = "/upload_settings/ios/"
-    typealias ApiReturnType = BodyResponse;
+    typealias ApiReturnType = BodyResponse
 
-    var settings: String?;
+    var settings: String?
 
     init(settings: String) {
-        self.settings = settings;
+        self.settings = settings
     }
 
     init?(map: Map) {

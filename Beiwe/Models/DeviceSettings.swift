@@ -4,14 +4,14 @@
 //
 
 import Foundation
-import ObjectMapper;
+import ObjectMapper
 
 // Note that while it's related to PermissionStatus, it's not the same and it mainly deals with settings coming from the backend
 enum DevicePermission: String {
-    case requested = "requested" // initial state... also "undetermined" state
-    case denied = "denied" // when a user explicitly denies
-    case enabled = "enabled" // when a user grants the permission
-    case disabled = "disabled" // when a data stream is unused OR no longer needed
+    case requested // initial state... also "undetermined" state
+    case denied // when a user explicitly denies
+    case enabled // when a user grants the permission
+    case disabled // when a data stream is unused OR no longer needed
 
     func isRequested() -> Bool { self == .requested }
     func isDenied() -> Bool { self == .denied }
@@ -19,7 +19,7 @@ enum DevicePermission: String {
     func isDisabled() -> Bool { self == .disabled }
 }
 
-struct DeviceSettings : Mappable {
+struct DeviceSettings: Mappable {
 
     var checkForNewSettingsFreqSeconds = 60; // 21600;
     var accelerometer: DevicePermission = .requested

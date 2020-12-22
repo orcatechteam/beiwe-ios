@@ -33,6 +33,7 @@ PODS:
     - PromiseKit/CorePromise
   - ReachabilitySwift (3)
   - ResearchKit (1.5.2)
+  - SwiftLint (0.42.0)
   - SwiftValidator (4.0.0)
   - XCGLogger (7.0.0):
     - XCGLogger/Core (= 7.0.0)
@@ -59,6 +60,7 @@ DEPENDENCIES:
   - PromiseKit
   - ReachabilitySwift (~> 3)
   - ResearchKit
+  - SwiftLint
   - SwiftValidator (from `https://github.com/jpotts18/SwiftValidator.git`, branch `master`)
   - XCGLogger (~> 7.0.0)
   - XLActionController
@@ -79,6 +81,7 @@ SPEC REPOS:
     - PromiseKit
     - ReachabilitySwift
     - ResearchKit
+    - SwiftLint
     - XCGLogger
     - XLActionController
 
@@ -127,10 +130,11 @@ SPEC CHECKSUMS:
   PromiseKit: e4863d06976e7dee5e41c04fc7371c16b3600292
   ReachabilitySwift: f5b9bb30a0777fac8f09ce8b067e32faeb29bb64
   ResearchKit: a5770681dd61afddd3d1f24d232b9abf00cba454
+  SwiftLint: 4fa9579c63416865179bc416f0a92d55f009600d
   SwiftValidator: 249b6b3ae3b294266c5b9de134d94f18f2d5aa47
   XCGLogger: 0434f15e3909cdc450bb63faf638b8792ab782ab
   XLActionController: f1f2226d2c6629db197d4a41f2da907085a4cb9d
 
-PODFILE CHECKSUM: 5d03ef931e2f3ca70b0376c26e954cc820d7ab60
+PODFILE CHECKSUM: 9903792c109097de7e6990d33a6eed9d63d31136
 
 COCOAPODS: 1.10.0
