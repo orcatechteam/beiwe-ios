@@ -69,13 +69,12 @@ class RegisterViewController: FormViewController {
                         print("Bad validation.")
                         return
                     }
-                    
-                    PKHUD.sharedHUD.dimsBackground = true;
-                    PKHUD.sharedHUD.userInteractionOnUnderlyingViewsEnabled = false;
+                    PKHUD.sharedHUD.dimsBackground = true
+                    PKHUD.sharedHUD.userInteractionOnUnderlyingViewsEnabled = false
                     HUD.show(.progress);
-                    let formValues = self.form.values();
-                    let patientId: String? = formValues["patientId"] as! String?;
-                    //let phoneNumber: String? = formValues["phone"] as! String?;
+                    let formValues = self.form.values()
+                    let patientId: String? = formValues["patientId"] as! String?
+                    // let phoneNumber: String? = formValues["phone"] as! String?
                     let phoneNumber: String? = "NOT_SUPPLIED"
                     let newPassword: String? = formValues["password"] as! String?
                     let tempPassword: String? = formValues["tempPassword"] as! String?
