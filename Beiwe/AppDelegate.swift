@@ -46,7 +46,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.setupReachability()
         self.setModelVersionID()
         self.checkTelephony()
-        //self.setupColors()
+        // self.setupColors()
 
         storyboard = UIStoryboard(name: "Main", bundle: Bundle.main)
 
@@ -57,14 +57,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return StudyManager.sharedInstance.loadDefaultStudy()
         }.done { _ -> Void in
             self.transitionToCurrentAppState()
-        }.catch { err -> Void in
+        }.catch { _ -> Void in
             print("Database open failed.")
         }
 
         return true
     }
 
-    func changeRootViewControllerWithIdentifier(_ identifier:String!) {
+    func changeRootViewControllerWithIdentifier(_ identifier: String!) {
         guard identifier == currentRootView else {
             return
         }
@@ -76,7 +76,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func changeRootViewController(_ desiredViewController: UIViewController, identifier: String? = nil) {
         currentRootView = identifier
 
-        let snapshot:UIView = (self.window?.snapshotView(afterScreenUpdates: true))!
+        let snapshot: UIView = (self.window?.snapshotView(afterScreenUpdates: true))!
         desiredViewController.view.addSubview(snapshot)
 
         self.window?.rootViewController = desiredViewController
@@ -84,17 +84,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UIView.animate(withDuration: 0.3, animations: {() in
             snapshot.layer.opacity = 0
             snapshot.layer.transform = CATransform3DMakeScale(1.5, 1.5, 1.5)
-            }, completion: {
-                (value: Bool) in
+            }, completion: { _ in
                 snapshot.removeFromSuperview()
         })
     }
-    
-    func setupColors(){
+
+    func setupColors() {
         UIView.appearance(whenContainedInInstancesOf: [ORKTaskViewController.self]).tintColor = AppColors.tintColor
     }
-    
-    func setupWindow(){
+
+    func setupWindow() {
         self.window = UIWindow(frame: UIScreen.main.bounds)
         if let win = self.window {
             win.rootViewController = UIStoryboard(name: "LaunchScreen", bundle: Bundle.main).instantiateViewController(withIdentifier: "launchScreen")
@@ -102,10 +101,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
-    func setupLogging(){
+    func setupLogging() {
         // Override point for customization after application launch.
         Fabric.with([Crashlytics.self])
-        
+
         // Create a destination for the system console log (via NSLog)
         let systemLogDestination = AppleSystemLogDestination(owner: log, identifier: "advancedLogger.systemLogDestination")
 
@@ -118,7 +117,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         systemLogDestination.showFileName = false // true
         systemLogDestination.showLineNumber = false // true
         systemLogDestination.showDate = true
-        
+
         // Add the destination to the logger
         log.add(destination: systemLogDestination)
 
@@ -134,11 +133,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Add the destination to the logger
         log.add(destination: crashlyticsLogDestination)
-        
+
         log.logAppDetails()
     }
-    
-    func setupReachability(){
+
+    func setupReachability() {
         do {
             reachability = Reachability()
             try reachability!.startNotifier()
@@ -146,8 +145,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             log.error("Unable to create or start Reachability")
         }
     }
-    
-    func setModelVersionID(){
+
+    func setModelVersionID() {
         let uiDevice = UIDevice.current
         modelVersionId = UIDevice.current.model + "/" + UIDevice.current.systemVersion
         log.info("AppUUID: \(PersistentAppUUID.sharedInstance.uuid)")
@@ -157,8 +156,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         log.info("Model: \(uiDevice.model)")
         log.info("Platform: \(platform())")
     }
-    
-    func checkTelephony(){
+
+    func checkTelephony() {
         canOpenTel = UIApplication.shared.canOpenURL(URL(string: "tel:6175551212")!)
     }
 
@@ -168,16 +167,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         if let currentStudy = StudyManager.sharedInstance.currentStudy {
             log.info("currentStudy.participantConsented: `\(currentStudy.participantConsented)`")
-            if (currentStudy.participantConsented) {
+            if currentStudy.participantConsented {
                 StudyManager.sharedInstance.startStudyDataServices()
             }
-            if (!isLoggedIn) {
+            if !isLoggedIn {
                 // Load up the log in view
                 changeRootViewControllerWithIdentifier("login")
             } else {
                 // We are logged in, so if we've completed onboarding load main interface
                 // Otherwise continue the onboarding.
-                if (currentStudy.participantConsented) {
+                if currentStudy.participantConsented {
                     changeRootViewControllerWithIdentifier("mainView")
                 } else {
                     changeRootViewController(ConsentManager().consentViewController)
@@ -211,7 +210,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func checkPasswordAndLogin(_ password: String) -> Bool {
         if let storedPassword = PersistentPasswordManager.sharedInstance.passwordForStudy(), storedPassword.count > 0 {
-            if (password == storedPassword) {
+            if password == storedPassword {
                 ApiManager.sharedInstance.password = storedPassword
                 isLoggedIn = true
                 return true
@@ -226,7 +225,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         print("ApplicationWillEnterForeground")
         if let timeEnteredBackground = timeEnteredBackground, let currentStudy = StudyManager.sharedInstance.currentStudy, let studySettings = currentStudy.studySettings, isLoggedIn == true {
             let loginExpires = timeEnteredBackground.addingTimeInterval(Double(studySettings.secondsBeforeAutoLogout))
-            if (loginExpires.compare(Date()) == ComparisonResult.orderedAscending) {
+            if loginExpires.compare(Date()) == ComparisonResult.orderedAscending {
                 // expired.  Log 'em out
                 isLoggedIn = false
                 transitionToCurrentAppState()
@@ -267,7 +266,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func displayCurrentMainView() {
         var view: String
-        if let _ = StudyManager.sharedInstance.currentStudy {
+        if StudyManager.sharedInstance.currentStudy != nil {
             view = "initialStudyView"
         } else {
             view = "registerView"
@@ -295,17 +294,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         log.info("applicationProtectedDataWillBecomeUnavailable")
         lockEvent.emit(true)
         AppEventManager.sharedInstance.logAppEvent(event: "locked", msg: "Phone/keystore locked")
-        
     }
-    
+
     /* Crashlytics functions -- future */
 
     func setDebuggingUser(_ username: String) {
         // TODO: Use the current user's information
         // You can call any combination of these three methods
-        //Crashlytics.sharedInstance().setUserEmail("user@fabric.io")
+        // Crashlytics.sharedInstance().setUserEmail("user@fabric.io")
         Crashlytics.sharedInstance().setUserIdentifier(username)
-        //Crashlytics.sharedInstance().setUserName("Test User")
+        // Crashlytics.sharedInstance().setUserName("Test User")
     }
 
     func crash() {
@@ -314,8 +312,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 extension AppDelegate: UNUserNotificationCenterDelegate {
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void)
-    {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let notificationIdentifier = response.notification.request.identifier
         if notificationIdentifier == "settingsUpdatedNotification" {
             Permission.locationAlways.request(handleLocationPermission)
@@ -326,7 +323,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     func handleLocationPermission(status: PermissionStatus) {
         log.info("permission for gps was: `\(status)`")
         self.transitionToCurrentAppState()
-        guard let study = StudyManager.sharedInstance.currentStudy, let _ = study.studySettings else {
+        guard let study = StudyManager.sharedInstance.currentStudy, study.studySettings != nil else {
             return
         }
         StudyManager.sharedInstance.handleLocationPermissionStatus(status: status)
