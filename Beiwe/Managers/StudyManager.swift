@@ -15,83 +15,86 @@ import DLLocalNotifications
 import Permission
 
 class StudyManager {
-    static let sharedInstance = StudyManager();
+    static let sharedInstance = StudyManager()
 
     let MAX_UPLOAD_DATA: Int64 = 250 * (1024 * 1024)
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
-    let calendar = Calendar.current;
-    var keyRef: SecKey?;
+    let calendar = Calendar.current
+    var keyRef: SecKey?
 
-    var currentStudy: Study?;
-    var gpsManager: GPSManager?;
-    var isUploading = false;
-    let surveysUpdatedEvent: Event<Int> = Event<Int>();
+    var currentStudy: Study?
+    var gpsManager: GPSManager?
+    var isUploading = false
+    let surveysUpdatedEvent: Event<Int> = Event<Int>()
     var isStudyLoaded: Bool {
-        return currentStudy != nil;
+        return currentStudy != nil
     }
 
     func loadDefaultStudy() -> Promise<Bool> {
-        currentStudy = nil;
-        gpsManager = nil;
+        currentStudy = nil
+        gpsManager = nil
         return Recline.shared.queryAll().then { (studies: [Study]) -> Promise<Bool> in
             if (studies.count > 1) {
                 log.error("Multiple Studies: \(studies)")
                 Crashlytics.sharedInstance().recordError(NSError(domain: "com.rf.beiwe.studies", code: 1, userInfo: nil))
             }
             if (studies.count > 0) {
-                self.currentStudy = studies[0];
+                self.currentStudy = studies[0]
                 AppDelegate.sharedInstance().setDebuggingUser(self.currentStudy?.patientId ?? "unknown")
             }
-            return Promise.value(true);
+            return Promise.value(true)
         }
 
     }
 
     func setApiCredentials() {
         guard let currentStudy = currentStudy, gpsManager == nil else {
-            return;
+            return
         }
 
         /* Setup APIManager's security */
-        ApiManager.sharedInstance.password = PersistentPasswordManager.sharedInstance.passwordForStudy() ?? "";
+        ApiManager.sharedInstance.password = PersistentPasswordManager.sharedInstance.passwordForStudy() ?? ""
         if let patientId = currentStudy.patientId {
-            ApiManager.sharedInstance.patientId = patientId;
+            ApiManager.sharedInstance.patientId = patientId
             if let clientPublicKey = currentStudy.studySettings?.clientPublicKey {
                 do {
-                    let pkey = try PersistentPasswordManager.sharedInstance.storePublicKeyForStudy(clientPublicKey, patientId: patientId);
+                    let pkey = try PersistentPasswordManager.sharedInstance.storePublicKeyForStudy(clientPublicKey, patientId: patientId)
                     keyRef = pkey
                 } catch {
-                    log.error("Failed to store RSA key in keychain.");
+                    log.error("Failed to store RSA key in keychain.")
                 }
             } else {
-                log.error("No public key found.  Can't store");
+                log.error("No public key found.  Can't store")
             }
         }
     }
     
     func startStudyDataServices() {
         if gpsManager != nil {
-            return;
+            return
         }
         setApiCredentials()
-        DataStorageManager.sharedInstance.setCurrentStudy(self.currentStudy!, secKeyRef: keyRef);
-        self.prepareDataServices();
+        DataStorageManager.sharedInstance.setCurrentStudy(self.currentStudy!, secKeyRef: keyRef)
+        self.prepareDataServices()
         NotificationCenter.default.addObserver(self, selector: #selector(self.reachabilityChanged), name: ReachabilityChangedNotification, object: nil)
 
     }
 
     func enableGpsDataService() {
         guard let studySettings = currentStudy?.studySettings else {
-            return;
+            return
         }
         log.info("StudyMgr.enableGpsDataService")
-        gpsManager = GPSManager();
+        gpsManager = GPSManager()
         log.info("gpsAllowed: \(gpsManager?.gpsAllowed())")
-        if (studySettings.gps && studySettings.gpsOnDurationSeconds > 0) {
+        if (currentStudy?.deviceSettings?.gps.isRequested() ?? false) {
+            // @TODO [~] Update to check deviceSettings.gps == DevicePermission.requested
+            // @TODO [~] Once enabled... need to flip deviceSettings.gps == DevicePermission.enabled
+        }
         if (studySettings.gps.isRequested() && studySettings.gpsOnDurationSeconds > 0) {
             log.info("preparing gps for data svc...")
             gpsManager!.addDataService(studySettings.gpsOnDurationSeconds, off: studySettings.gpsOffDurationSeconds, handler: gpsManager!)
-            _ = gpsManager!.startGpsAndTimer();
+            _ = gpsManager!.startGpsAndTimer()
         }
     }
 
@@ -102,10 +105,11 @@ class StudyManager {
 
         log.info("prepareDataServices")
 
-        DataStorageManager.sharedInstance.createDirectories();
+        DataStorageManager.sharedInstance.createDirectories()
         /* Move non current files out.  Probably not necessary, would happen later anyway */
-        _ = DataStorageManager.sharedInstance.prepareForUpload();
-        gpsManager = GPSManager();
+        _ = DataStorageManager.sharedInstance.prepareForUpload()
+        gpsManager = GPSManager()
+        let gpsAllowed = gpsManager?.gpsAllowed() ?? false
         
         // Check if gps fuzzing is enabled for currentStudy
         gpsManager?.enableGpsFuzzing = studySettings.fuzzGps ? true : false
@@ -120,42 +124,42 @@ class StudyManager {
         }
         if (studySettings.accelerometer.isRequested() && studySettings.gpsOnDurationSeconds > 0) {
             log.info("preparing accel for data svc...")
-            gpsManager!.addDataService(studySettings.accelerometerOnDurationSeconds, off: studySettings.accelerometerOffDurationSeconds, handler: AccelerometerManager());
+            gpsManager!.addDataService(studySettings.accelerometerOnDurationSeconds, off: studySettings.accelerometerOffDurationSeconds, handler: AccelerometerManager())
             study.studySettings?.accelerometer = .enabled
         }
         if (studySettings.powerState.isRequested()) {
             log.info("preparing power state for data svc...")
-            gpsManager!.addDataService(PowerStateManager());
+            gpsManager!.addDataService(PowerStateManager())
             study.studySettings?.powerState = .enabled
         }
 
         if (studySettings.proximity.isRequested()) {
             log.info("preparing proximity for data svc...")
-            gpsManager!.addDataService(ProximityManager());
+            gpsManager!.addDataService(ProximityManager())
             study.studySettings?.proximity = .enabled
         }
 
         if (studySettings.reachability.isRequested()) {
             log.info("preparing reachability for data svc...")
-            gpsManager!.addDataService(ReachabilityManager());
+            gpsManager!.addDataService(ReachabilityManager())
             study.studySettings?.reachability = .enabled
         }
 
         if (studySettings.gyro.isRequested()) {
             log.info("preparing gyro for data svc...")
-            gpsManager!.addDataService(studySettings.gyroOnDurationSeconds, off: studySettings.gyroOffDurationSeconds, handler: GyroManager());
+            gpsManager!.addDataService(studySettings.gyroOnDurationSeconds, off: studySettings.gyroOffDurationSeconds, handler: GyroManager())
             study.studySettings?.gyro = .enabled
         }
 
         if (studySettings.magnetometer.isRequested() && studySettings.magnetometerOnDurationSeconds > 0) {
             log.info("preparing magnetometer for data svc...")
-            gpsManager!.addDataService(studySettings.magnetometerOnDurationSeconds, off: studySettings.magnetometerOffDurationSeconds, handler: MagnetometerManager());
+            gpsManager!.addDataService(studySettings.magnetometerOnDurationSeconds, off: studySettings.magnetometerOffDurationSeconds, handler: MagnetometerManager())
             study.studySettings?.magnetometer = .enabled
         }
 
         if (studySettings.motion.isRequested() && studySettings.motionOnDurationSeconds > 0) {
             log.info("preparing motion for data svc...")
-            gpsManager!.addDataService(studySettings.motionOnDurationSeconds, off: studySettings.motionOffDurationSeconds, handler: DeviceMotionManager());
+            gpsManager!.addDataService(studySettings.motionOnDurationSeconds, off: studySettings.motionOffDurationSeconds, handler: DeviceMotionManager())
             study.studySettings?.motion = .enabled
         }
 
@@ -169,27 +173,28 @@ class StudyManager {
         }
 
         if studySettings.gps.isRequested() {
-            _ = gpsManager!.startGpsAndTimer();
+            _ = gpsManager!.startGpsAndTimer()
         } else {
-            _ = gpsManager!.startTimer();
+            _ = gpsManager!.startTimer()
         }
     }
 
     func setConsented() -> Promise<Bool> {
+        log.info("StudyMgr.setConsented...")
         guard let study = currentStudy, let studySettings = study.studySettings else {
-            return Promise.value(false);
+            return Promise.value(false)
         }
         setApiCredentials()
-        let currentTime: Int64 = Int64(Date().timeIntervalSince1970);
-        study.nextUploadCheck = currentTime + Int64(studySettings.uploadDataFileFrequencySeconds);
-        study.nextSurveyCheck = currentTime + Int64(studySettings.checkForNewSurveysFreqSeconds);
-        study.nextSettingsCheck = currentTime + Int64(study.settingsCheckFrequency);
+        let currentTime: Int64 = Int64(Date().timeIntervalSince1970)
+        study.nextUploadCheck = currentTime + Int64(studySettings.uploadDataFileFrequencySeconds)
+        study.nextSurveyCheck = currentTime + Int64(studySettings.checkForNewSurveysFreqSeconds)
+        study.nextSettingsCheck = currentTime + Int64(study.settingsCheckFrequency)
 
-        study.participantConsented = true;
+        study.participantConsented = true
         DataStorageManager.sharedInstance.setCurrentStudy(study, secKeyRef: keyRef)
-        DataStorageManager.sharedInstance.createDirectories();
+        DataStorageManager.sharedInstance.createDirectories()
         return Recline.shared.save(study).then { _ -> Promise<Bool> in
-            return self.checkSurveys();
+            return self.checkSurveys()
         }
     }
 
@@ -212,12 +217,12 @@ class StudyManager {
         if (gpsManager != nil) {
             promise = gpsManager!.stopAndClear()
         } else {
-            promise = Promise();
+            promise = Promise()
         }
     
         return promise.then(on: queue) { _ -> Promise<Bool> in
-            //self.gpsManager = nil;
-            self.currentStudy = nil;
+            //self.gpsManager = nil
+            self.currentStudy = nil
             return Promise.value(true)
         }
     }
@@ -226,17 +231,17 @@ class StudyManager {
 
         /*
         guard let study = currentStudy else {
-            return Promise(true);
+            return Promise(true)
         }
         */
 
-        NotificationCenter.default.removeObserver(self, name: ReachabilityChangedNotification, object:nil);
+        NotificationCenter.default.removeObserver(self, name: ReachabilityChangedNotification, object:nil)
 
         var promise: Promise<Void>
         if (gpsManager != nil) {
             promise = gpsManager!.stopAndClear().map{ _ in self.gpsManager = nil }
         } else {
-            promise = Promise();
+            promise = Promise()
         }
 
 
@@ -251,43 +256,44 @@ class StudyManager {
     func _removeStudyFiles() -> Promise<Bool> {
         return Promise { seal in
             let fileManager = FileManager.default
-            var enumerator = fileManager.enumerator(atPath: DataStorageManager.uploadDataDirectory().path);
+            var enumerator = fileManager.enumerator(atPath: DataStorageManager.uploadDataDirectory().path)
 
             if let enumerator = enumerator {
                 while let filename = enumerator.nextObject() as? String {
                     if (true /*filename.hasSuffix(DataStorageManager.dataFileSuffix)*/) {
-                        let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename);
-                        try fileManager.removeItem(at: filePath);
+                        let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename)
+                        try fileManager.removeItem(at: filePath)
                     }
                 }
             }
 
-            enumerator = fileManager.enumerator(atPath: DataStorageManager.currentDataDirectory().path);
+            enumerator = fileManager.enumerator(atPath: DataStorageManager.currentDataDirectory().path)
 
             if let enumerator = enumerator {
                 while let filename = enumerator.nextObject() as? String {
                     if (true /* filename.hasSuffix(DataStorageManager.dataFileSuffix) */) {
-                        let filePath = DataStorageManager.currentDataDirectory().appendingPathComponent(filename);
-                        try fileManager.removeItem(at: filePath);
+                        let filePath = DataStorageManager.currentDataDirectory().appendingPathComponent(filename)
+                        try fileManager.removeItem(at: filePath)
                     }
                 }
             }
             
-            self.currentStudy = nil;
+            self.currentStudy = nil
             seal.fulfill(true)
         }
     }
     
     @objc func reachabilityChanged(_ notification: Notification){
         _ = Promise().done {
-            log.info("Reachability changed, running periodic.");
-            self.periodicNetworkTransfers();
+            log.info("Reachability changed, running periodic.")
+            self.periodicNetworkTransfers()
         }
     }
 
     func periodicNetworkTransfers() {
+        log.info("StudyMgr.periodicNetworkTransfers...")
         guard let currentStudy = currentStudy, let studySettings = currentStudy.studySettings else {
-            return;
+            return
         }
 
         var reachable = false
@@ -296,20 +302,22 @@ class StudyManager {
         }
         
         // Good time to compact the database
-        let currentTime: Int64 = Int64(Date().timeIntervalSince1970);
-        let nextSurvey = currentStudy.nextSurveyCheck ?? 0;
-        let nextUpload = currentStudy.nextUploadCheck ?? 0;
-        let nextSettings = currentStudy.nextSettingsCheck ?? 0;
+        let currentTime: Int64 = Int64(Date().timeIntervalSince1970)
+        let nextSurvey = currentStudy.nextSurveyCheck ?? 0
+        let nextUpload = currentStudy.nextUploadCheck ?? 0
+        let nextSettings = currentStudy.nextSettingsCheck ?? 0
         
         log.info("CurrentTime " + currentTime.description + ", NextUpload: " + nextUpload.description)
+        log.info("nextSurvey: `\(nextSurvey)`")
+        log.info("nextSettings: `\(nextSettings)`")
 
         if (currentTime > nextSettings) {
             self.setNextSettingsTime().done { _ in
                 if (reachable) {
-                    _ = self.checkSettings();
+                    _ = self.checkSettings()
                 }
             }.catch { _ in
-                log.error("Error checking for surveys");
+                log.error("Error checking for surveys")
             }
         }
 
@@ -318,10 +326,10 @@ class StudyManager {
             currentStudy.missedSurveyCheck = !reachable
             self.setNextSurveyTime().done { _ in
                 if (reachable) {
-                    _ = self.checkSurveys();
+                    _ = self.checkSurveys()
                 }
             }.catch { _ in
-                log.error("Error checking for surveys");
+                log.error("Error checking for surveys")
             }
         }
         else if (currentTime > nextUpload || (reachable && currentStudy.missedUploadCheck)) {
@@ -329,7 +337,7 @@ class StudyManager {
             /* This will be saved because setNextUpload saves the study */
             currentStudy.missedUploadCheck = !reachable
             self.setNextUploadTime().done { _ in
-                _ = self.upload(!reachable);
+                _ = self.upload(!reachable)
             }.catch { _ in
                 log.error("Error checking for uploads")
             }
@@ -339,68 +347,68 @@ class StudyManager {
     }
 
     func cleanupSurvey(_ activeSurvey: ActiveSurvey) {
-        removeNotificationForSurvey(activeSurvey);
+        removeNotificationForSurvey(activeSurvey)
         if let surveyId = activeSurvey.survey?.surveyId {
-            let timingsName = TrackingSurveyPresenter.timingDataType + "_" + surveyId;
-            _ = DataStorageManager.sharedInstance.closeStore(timingsName);
+            let timingsName = TrackingSurveyPresenter.timingDataType + "_" + surveyId
+            _ = DataStorageManager.sharedInstance.closeStore(timingsName)
         }
     }
 
     func submitSurvey(_ activeSurvey: ActiveSurvey, surveyPresenter: TrackingSurveyPresenter? = nil) {
         if let survey = activeSurvey.survey, let surveyId = survey.surveyId, let surveyType = survey.surveyType, surveyType == .TrackingSurvey {
-            var trackingSurvey: TrackingSurveyPresenter;
+            var trackingSurvey: TrackingSurveyPresenter
             if (surveyPresenter == nil) {
                 trackingSurvey = TrackingSurveyPresenter(surveyId: surveyId, activeSurvey: activeSurvey, survey: survey)
                 trackingSurvey.addTimingsEvent("expired", question: nil)
             } else {
-                trackingSurvey = surveyPresenter!;
+                trackingSurvey = surveyPresenter!
             }
-            _ = trackingSurvey.finalizeSurveyAnswers();
+            _ = trackingSurvey.finalizeSurveyAnswers()
             if (activeSurvey.bwAnswers.count > 0) {
                 if let surveyType = survey.surveyType {
                     switch (surveyType) {
                     case .AudioSurvey:
-                        currentStudy?.submittedAudioSurveys = (currentStudy?.submittedAudioSurveys ?? 0) + 1;
+                        currentStudy?.submittedAudioSurveys = (currentStudy?.submittedAudioSurveys ?? 0) + 1
                     case .TrackingSurvey:
-                        currentStudy?.submittedTrackingSurveys = (currentStudy?.submittedTrackingSurveys ?? 0) + 1;
+                        currentStudy?.submittedTrackingSurveys = (currentStudy?.submittedTrackingSurveys ?? 0) + 1
 
                     }
                 }
             }
         }
 
-        cleanupSurvey(activeSurvey);
+        cleanupSurvey(activeSurvey)
     }
 
     func removeNotificationForSurvey(_ survey: ActiveSurvey) {
         guard let notification = survey.notification else {
-            return;
+            return
         }
         let alertBody = notification.alertBody ?? ""
         log.info("Cancelling notification: \(alertBody), \(String(describing: notification.userInfo))")
 
-        UIApplication.shared.cancelLocalNotification(notification);
-        survey.notification = nil;
+        UIApplication.shared.cancelLocalNotification(notification)
+        survey.notification = nil
     }
 
     func updateActiveSurveys(_ forceSave: Bool = false) -> TimeInterval {
         log.info("Updating active surveys...")
-        let currentDate = Date();
-        let currentTime = currentDate.timeIntervalSince1970;
-        let currentDay = (calendar as NSCalendar).component(.weekday, from: currentDate) - 1;
-        var nowDateComponents = (calendar as NSCalendar).components([NSCalendar.Unit.day, NSCalendar.Unit.year, NSCalendar.Unit.month, NSCalendar.Unit.timeZone], from: currentDate);
-        nowDateComponents.hour = 0;
-        nowDateComponents.minute = 0;
-        nowDateComponents.second = 0;
+        let currentDate = Date()
+        let currentTime = currentDate.timeIntervalSince1970
+        let currentDay = (calendar as NSCalendar).component(.weekday, from: currentDate) - 1
+        var nowDateComponents = (calendar as NSCalendar).components([NSCalendar.Unit.day, NSCalendar.Unit.year, NSCalendar.Unit.month, NSCalendar.Unit.timeZone], from: currentDate)
+        nowDateComponents.hour = 0
+        nowDateComponents.minute = 0
+        nowDateComponents.second = 0
 
-        var closestNextSurveyTime: TimeInterval = currentTime + (60.0*60.0*24.0*7);
+        var closestNextSurveyTime: TimeInterval = currentTime + (60.0*60.0*24.0*7)
 
         guard let study = currentStudy, let dayBegin = calendar.date(from: nowDateComponents)  else {
-            return Date().addingTimeInterval((15.0*60.0)).timeIntervalSince1970;
+            return Date().addingTimeInterval((15.0*60.0)).timeIntervalSince1970
         }
 
 
-        var surveyDataModified = false;
+        var surveyDataModified = false
 
         /* For all active surveys that aren't complete, but have expired, submit them */
         for (id, activeSurvey) in study.activeSurveys {
@@ -411,9 +419,9 @@ class StudyManager {
             // it resaves a new version of the data in a file.
             if(activeSurvey.survey?.alwaysAvailable ?? false && activeSurvey.isComplete){
 //                print("submitted 1")
-                log.info("ActiveSurvey \(id) expired.");
-                activeSurvey.isComplete = true;
-                surveyDataModified = true;
+                log.info("ActiveSurvey \(id) expired.")
+                activeSurvey.isComplete = true
+                surveyDataModified = true
                 //  adding submitSurvey creates a new file; therefore we get 2 files of data- one when you
                 //  hit the confirm button and one when this code executes. we DO NOT KNOW why this is in the else if statement
                 //  below - however we are not keeping it in this if statement for the aforementioned problem.
@@ -424,83 +432,83 @@ class StudyManager {
             // This function gets called whenever you try to display the home page, thus it happens at a very odd time.
             else if (!activeSurvey.isComplete && activeSurvey.expires > 0 && activeSurvey.expires <= currentTime) {
 //                print("submitted 2")
-                log.info("ActiveSurvey \(id) expired.");
-                activeSurvey.isComplete = true;
-                surveyDataModified = true;
-                submitSurvey(activeSurvey);
+                log.info("ActiveSurvey \(id) expired.")
+                activeSurvey.isComplete = true
+                surveyDataModified = true
+                submitSurvey(activeSurvey)
             }
         }
 
-        var allSurveyIds: [String] = [ ];
+        var allSurveyIds: [String] = [ ]
         /* Now for each survey from the server, check on the scheduling */
         for survey in study.surveys {
-            var next: Double = 0;
+            var next: Double = 0
             /* Find the next scheduled date that is >= now */
             outer: for day in 0..<7 {
-                let dayIdx = (day + currentDay) % 7;
+                let dayIdx = (day + currentDay) % 7
                 let timings = survey.timings[dayIdx].sorted()
 
                 for dayTime in timings {
-                    let possibleNxt = dayBegin.addingTimeInterval((Double(day) * 24.0 * 60.0 * 60.0) + Double(dayTime)).timeIntervalSince1970;
+                    let possibleNxt = dayBegin.addingTimeInterval((Double(day) * 24.0 * 60.0 * 60.0) + Double(dayTime)).timeIntervalSince1970
                     if (possibleNxt > currentTime ) {
-                        next = possibleNxt;
+                        next = possibleNxt
                         break outer
                     }
                 }
             }
             if let id = survey.surveyId  {
                 if (next > 0) {
-                    closestNextSurveyTime = min(closestNextSurveyTime, next);
+                    closestNextSurveyTime = min(closestNextSurveyTime, next)
                 }
-                allSurveyIds.append(id);
+                allSurveyIds.append(id)
                 /* If we don't know about this survey already, add it in there for TRIGGERONFIRSTDOWNLOAD surverys*/
                 if study.activeSurveys[id] == nil && (survey.triggerOnFirstDownload || next > 0) {
-                    log.info("Adding survey  \(id) to active surveys");
-                    study.activeSurveys[id] = ActiveSurvey(survey: survey);
+                    log.info("Adding survey  \(id) to active surveys")
+                    study.activeSurveys[id] = ActiveSurvey(survey: survey)
                     /* Schedule it for the next upcoming time, or immediately if triggerOnFirstDownload is true */
-                    study.activeSurveys[id]?.expires = survey.triggerOnFirstDownload ? currentTime : next;
-                    study.activeSurveys[id]?.isComplete = true;
-                    log.info("Added survey \(id), expires: \(Date(timeIntervalSince1970: study.activeSurveys[id]!.expires))");
-                    surveyDataModified = true;
+                    study.activeSurveys[id]?.expires = survey.triggerOnFirstDownload ? currentTime : next
+                    study.activeSurveys[id]?.isComplete = true
+                    log.info("Added survey \(id), expires: \(Date(timeIntervalSince1970: study.activeSurveys[id]!.expires))")
+                    surveyDataModified = true
                 }
                 /* We want to display permanent surveys as active, and expect to change some details below (currently identical to the actions we take on a regular active survey) */
                 else if study.activeSurveys[id] == nil && (survey.alwaysAvailable) {
-                    log.info("Adding survey  \(id) to active surveys");
-                    study.activeSurveys[id] = ActiveSurvey(survey: survey);
+                    log.info("Adding survey  \(id) to active surveys")
+                    study.activeSurveys[id] = ActiveSurvey(survey: survey)
                     /* Schedule it for the next upcoming time, or immediately if alwaysAvailable is true */
-                    study.activeSurveys[id]?.expires = survey.alwaysAvailable ? currentTime : next;
-                    study.activeSurveys[id]?.isComplete = true;
-                    log.info("Added survey \(id), expires: \(Date(timeIntervalSince1970: study.activeSurveys[id]!.expires))");
-                    surveyDataModified = true;
+                    study.activeSurveys[id]?.expires = survey.alwaysAvailable ? currentTime : next
+                    study.activeSurveys[id]?.isComplete = true
+                    log.info("Added survey \(id), expires: \(Date(timeIntervalSince1970: study.activeSurveys[id]!.expires))")
+                    surveyDataModified = true
                 }
                 if let activeSurvey = study.activeSurveys[id] {
                     /* If it's complete (including surveys we force-completed above) and it's expired, it's time for the next one */
                     if (activeSurvey.isComplete && activeSurvey.expires <= currentTime && activeSurvey.expires > 0) {
-                        activeSurvey.reset(survey);
-                        activeSurvey.received = activeSurvey.expires;
+                        activeSurvey.reset(survey)
+                        activeSurvey.received = activeSurvey.expires
                         /*
                         let trackingSurvey: TrackingSurveyPresenter = TrackingSurveyPresenter(surveyId: id, activeSurvey: activeSurvey, survey: survey)
                         trackingSurvey.addTimingsEvent("notified", question: nil)
                         */
-                        TrackingSurveyPresenter.addTimingsEvent(id, event: "notified");
+                        TrackingSurveyPresenter.addTimingsEvent(id, event: "notified")
 
-                        surveyDataModified = true;
+                        surveyDataModified = true
 
                         /* Local notification goes here */
 
                         if let surveyType = survey.surveyType {
                             switch (surveyType) {
                             case .AudioSurvey:
-                                currentStudy?.receivedAudioSurveys = (currentStudy?.receivedAudioSurveys ?? 0) + 1;
+                                currentStudy?.receivedAudioSurveys = (currentStudy?.receivedAudioSurveys ?? 0) + 1
                             case .TrackingSurvey:
-                                currentStudy?.receivedTrackingSurveys = (currentStudy?.receivedTrackingSurveys ?? 0) + 1;
+                                currentStudy?.receivedTrackingSurveys = (currentStudy?.receivedTrackingSurveys ?? 0) + 1
                                 
                             }
 
-                            let localNotif = UILocalNotification();
-                            localNotif.fireDate = currentDate;
+                            let localNotif = UILocalNotification()
+                            localNotif.fireDate = currentDate
 
-                            var body: String;
+                            var body: String
                             switch(surveyType) {
                             case .TrackingSurvey:
                                 body = "A new survey has arrived and is awaiting completion."
@@ -508,23 +516,23 @@ class StudyManager {
                                 body = "A new audio question has arrived and is awaiting completion."
                             }
 
-                            localNotif.alertBody = body;
-                            localNotif.soundName = UILocalNotificationDefaultSoundName;
+                            localNotif.alertBody = body
+                            localNotif.soundName = UILocalNotificationDefaultSoundName
                             localNotif.userInfo = [
                                 "type": "survey",
                                 "survey_type": surveyType.rawValue,
                                 "survey_id": id
-                            ];
+                            ]
                             log.info("Sending Survey notif: \(body), \(String(describing: localNotif.userInfo))")
-                            UIApplication.shared.scheduleLocalNotification(localNotif);
-                            activeSurvey.notification = localNotif;
+                            UIApplication.shared.scheduleLocalNotification(localNotif)
+                            activeSurvey.notification = localNotif
 
                         }
 
                     }
                     if (activeSurvey.expires != next) {
-                        activeSurvey.expires = next;
-                        surveyDataModified = true;
+                        activeSurvey.expires = next
+                        surveyDataModified = true
                     }
                 }
             }
@@ -532,28 +540,28 @@ class StudyManager {
 
 
         /* Set the badge, and remove surveys no longer on server from our active surveys list */
-        var badgeCnt = 0;
+        var badgeCnt = 0
         for (id, activeSurvey) in study.activeSurveys {
             if (activeSurvey.isComplete && !allSurveyIds.contains(id)) {
-                cleanupSurvey(activeSurvey);
-                study.activeSurveys.removeValue(forKey: id);
-                surveyDataModified = true;
+                cleanupSurvey(activeSurvey)
+                study.activeSurveys.removeValue(forKey: id)
+                surveyDataModified = true
             } else if (!activeSurvey.isComplete) {
                 if (activeSurvey.expires > 0) {
-                    closestNextSurveyTime = min(closestNextSurveyTime, activeSurvey.expires);
+                    closestNextSurveyTime = min(closestNextSurveyTime, activeSurvey.expires)
                 }
-                badgeCnt += 1;
+                badgeCnt += 1
             }
         }
-        log.info("Badge Cnt: \(badgeCnt)");
+        log.info("Badge Cnt: \(badgeCnt)")
         /*
         if (badgeCnt != study.lastBadgeCnt) {
-            study.lastBadgeCnt = badgeCnt;
-            surveyDataModified = true;
-            let localNotif = UILocalNotification();
-            localNotif.applicationIconBadgeNumber = badgeCnt;
-            localNotif.fireDate = currentDate;
-            UIApplication.sharedApplication().scheduleLocalNotification(localNotif);
+            study.lastBadgeCnt = badgeCnt
+            surveyDataModified = true
+            let localNotif = UILocalNotification()
+            localNotif.applicationIconBadgeNumber = badgeCnt
+            localNotif.fireDate = currentDate
+            UIApplication.sharedApplication().scheduleLocalNotification(localNotif)
         }
         */
         UIApplication.shared.applicationIconBadgeNumber = badgeCnt
@@ -561,33 +569,33 @@ class StudyManager {
         if (surveyDataModified || forceSave ) {
             surveysUpdatedEvent.emit(0)
             Recline.shared.save(study).catch { _ in
-                log.error("Failed to save study after processing surveys");
+                log.error("Failed to save study after processing surveys")
             }
         }
 
         if let gpsManager = gpsManager  {
-            gpsManager.resetNextSurveyUpdate(closestNextSurveyTime);
+            gpsManager.resetNextSurveyUpdate(closestNextSurveyTime)
         }
-        return closestNextSurveyTime;
+        return closestNextSurveyTime
     }
 
     func checkSurveys() -> Promise<Bool> {
         guard let study = currentStudy, let _ = study.studySettings else {
-            return Promise.value(false);
+            return Promise.value(false)
         }
-        log.info("Checking for surveys...");
+        log.info("Checking for surveys...")
         return Recline.shared.save(study).then { _ -> Promise<([Survey], Int)> in
-                let surveyRequest = GetSurveysRequest();
-                return ApiManager.sharedInstance.arrayPostRequest(surveyRequest);
+                let surveyRequest = GetSurveysRequest()
+                return ApiManager.sharedInstance.arrayPostRequest(surveyRequest)
             }.then { (surveys, _) -> Promise<Void> in
-                log.info("Surveys: \(surveys)");
-                study.surveys = surveys;
-                return Recline.shared.save(study).asVoid();
+                log.info("Surveys: \(surveys)")
+                study.surveys = surveys
+                return Recline.shared.save(study).asVoid()
             }.then { _ -> Promise<Bool> in
-                _ = self.updateActiveSurveys();
-                return Promise.value(true);
+                _ = self.updateActiveSurveys()
+                return Promise.value(true)
             }.recover { _ -> Promise<Bool> in
-                return Promise.value(false);
+                return Promise.value(false)
         }
 
     }
@@ -604,28 +612,30 @@ class StudyManager {
 
     func checkSettings() -> Promise<Bool> {
         guard let study = currentStudy, let studySettings = study.studySettings else {
-            return Promise.value(false);
+            return Promise.value(false)
         }
-        log.info("Checking settings...");
+        log.info("Checking settings...")
         return Recline.shared.save(study).then { _ -> Promise<(DeviceSettings, Int)> in
-            let settingsRequest = GetSettingsRequest();
-            return ApiManager.sharedInstance.makePostRequest(settingsRequest);
+            let settingsRequest = GetSettingsRequest()
+            return ApiManager.sharedInstance.makePostRequest(settingsRequest)
         }.then { (deviceSettings: DeviceSettings, _) -> Promise<Void> in
 //            log.info("DevicePerm(rawValue: disabled): `\(DevicePermission(rawValue: "disabled"))`")
-            log.info("deviceSettings: \(deviceSettings)");
-            study.deviceSettings = deviceSettings;
+            log.info("deviceSettings: \(deviceSettings)")
+            study.deviceSettings = deviceSettings
+            let accelPerm = (studySettings.accelerometer, deviceSettings.accelerometer)
+            let motionPerm = (studySettings.motion, deviceSettings.motion)
+            let gpsPerm = (studySettings.gps, deviceSettings.gps)
             if (deviceSettings.accelerometer != studySettings.accelerometer && studySettings.accelerometer.isDisabled()) {
                 log.info("StudyMgr.checkSettings//accelerometer changed from `\(study.studySettings?.accelerometer)` to `\(deviceSettings.accelerometer)`")
-                switch studySettings.accelerometer {
-                case .disabled:
-                    log.info("accel was disabled...")
-                case .enabled:
-                    log.info("accel was enabled...")
-                case .requested, .denied:
-                    // perm was never granted?
-                    log.info("accel was requested or denied...")
+                switch accelPerm {
+                case (.disabled, .requested):
+                    log.info("accel disabled > requested...")
+                case (.enabled, .disabled):
+                    log.info("accel enabled > disabled...")
+                default:
+                    log.info("nada")
                 }
-                study.studySettings?.accelerometer = deviceSettings.accelerometer;
+                study.studySettings?.accelerometer = deviceSettings.accelerometer
             }
             if (deviceSettings.motion != studySettings.motion && studySettings.motion.isDisabled()) {
                 log.info("StudyMgr.checkSettings//motion changed from `\(study.studySettings?.motion)` to `\(deviceSettings.motion)`")
@@ -658,20 +668,20 @@ class StudyManager {
                 log.info("StudyMgr.checkSettings//reachability changed from `\(study.studySettings?.reachability)` to `\(deviceSettings.reachability)`")
                 study.studySettings?.reachability = deviceSettings.reachability
             }
-            return Recline.shared.save(study).asVoid();
+            return Recline.shared.save(study).asVoid()
         }.then { _ -> Promise<Bool> in
             self.handleSettingsUpdateNotification()
             _ = self.setNextSettingsTime()
             _ = self.uploadSettings()
-            return Promise.value(true);
+            return Promise.value(true)
         }.recover { _ -> Promise<Bool> in
-            return Promise.value(false);
+            return Promise.value(false)
         }
     }
 
     func uploadSettings() {
         guard let study = currentStudy, let studySettings = study.studySettings else {
-            return;
+            return
         }
         let settingsToUpload = studySettings.toJSONString()
         log.info("StudyMgr.uploadSettings()//settingsToUpload: `\(settingsToUpload)`")
@@ -682,8 +692,10 @@ class StudyManager {
     }
 
     func handleLocationPermissionStatus(status: PermissionStatus) {
+        log.info("permission for gps was: `\(status)`")
+
         guard let study = currentStudy, let _ = study.studySettings else {
-            return;
+            return
         }
         switch status {
         case .authorized:
@@ -705,6 +717,7 @@ class StudyManager {
     func handleSettingsUpdateNotification() {
         log.info("StudyMgr.handleSettingsUpdateNotification...")
         let triggerDate = Date().addingTimeInterval(30)
+        // @TODO [~] Need to update the text for the GPS notification...
         let settingsUpdatedNotification = DLNotification(identifier: "settingsUpdatedNotification", alertTitle: "Beiwe Settings Updated", alertBody: "The settings for the Beiwe app have been updated!", date: triggerDate, repeats: .none)
         let scheduler = DLNotificationScheduler()
         scheduler.scheduleNotification(notification: settingsUpdatedNotification)
@@ -713,36 +726,36 @@ class StudyManager {
 
     func setNextUploadTime() -> Promise<Bool> {
         guard let study = currentStudy, let studySettings = study.studySettings else {
-            return Promise.value(true);
+            return Promise.value(true)
         }
 
-        study.nextUploadCheck = Int64(Date().timeIntervalSince1970) + Int64(studySettings.uploadDataFileFrequencySeconds);
+        study.nextUploadCheck = Int64(Date().timeIntervalSince1970) + Int64(studySettings.uploadDataFileFrequencySeconds)
         return Recline.shared.save(study).then { _ -> Promise<Bool> in
-            return Promise.value(true);
+            return Promise.value(true)
         }
     }
 
     func setNextSurveyTime() -> Promise<Bool> {
         guard let study = currentStudy, let studySettings = study.studySettings else {
-            return Promise.value(true);
+            return Promise.value(true)
         }
 
         study.nextSurveyCheck = Int64(Date().timeIntervalSince1970) + Int64(studySettings.checkForNewSurveysFreqSeconds)
         return Recline.shared.save(study).then { _ -> Promise<Bool> in
-            return Promise.value(true);
+            return Promise.value(true)
         }
     }
 
     func setNextSettingsTime() -> Promise<Bool> {
         guard let study = currentStudy, let studySettings = study.studySettings else {
-            return Promise.value(true);
+            return Promise.value(true)
         }
 
-        study.nextSettingsCheck = Int64(Date().timeIntervalSince1970) + Int64(study.settingsCheckFrequency);
+        study.nextSettingsCheck = Int64(Date().timeIntervalSince1970) + Int64(study.settingsCheckFrequency)
         let inSecondsFromNow = (study.nextSettingsCheck ?? 0) - Int64(Date().timeIntervalSince1970)
         log.info("next settings check: \(study.nextSettingsCheck), now: \(Int64(Date().timeIntervalSince1970))... in \(inSecondsFromNow) seconds")
         return Recline.shared.save(study).then { _ -> Promise<Bool> in
-            return Promise.value(true);
+            return Promise.value(true)
         }
     }
 
@@ -784,10 +797,10 @@ class StudyManager {
                     log.info("Skipping deletion: \(file)")
                     continue
                 }
-                let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(file);
+                let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(file)
                 do {
                     log.warning("Removing file: \(filePath)")
-                    try FileManager.default.removeItem(at: filePath);
+                    try FileManager.default.removeItem(at: filePath)
                     used = used - fileList[file]!
                 } catch {
                     log.error("Error removing file: \(filePath)")
@@ -820,10 +833,10 @@ class StudyManager {
     func upload(_ processOnly: Bool) -> Promise<Void> {
         if (isUploading) {
             log.info("Already uploaded")
-            return Promise();
+            return Promise()
         }
-        log.info("Checking for uploads...");
-        isUploading = true;
+        log.info("Checking for uploads...")
+        isUploading = true
 
         var promiseChain: Promise<Bool>
 
@@ -834,12 +847,12 @@ class StudyManager {
             return true
         }
 
-        var numFiles = 0;
+        var numFiles = 0
         var size: Int64 = 0
         var storageInUse: Int64 = 0
         let q = DispatchQueue.global(qos: .default)
 
-        var filesToProcess: [String: Int64] = [:];
+        var filesToProcess: [String: Int64] = [:]
         return promiseChain.then(on: q) { (_: Bool) -> Promise<Bool> in
             let fileManager = FileManager.default
             let enumerator = fileManager.enumerator(atPath: DataStorageManager.uploadDataDirectory().path)
@@ -847,30 +860,30 @@ class StudyManager {
             if let enumerator = enumerator {
                 while let filename = enumerator.nextObject() as? String {
                     if (DataStorageManager.sharedInstance.isUploadFile(filename)) {
-                        let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename);
+                        let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename)
                         let attr = try FileManager.default.attributesOfItem(atPath: filePath.path)
                         let fileSize = (attr[FileAttributeKey.size]! as AnyObject).longLongValue
                         filesToProcess[filename] = fileSize
                         size = size + fileSize!
-                        //promises.append(promise);
+                        //promises.append(promise)
                     }
                 }
             }
             storageInUse = size
             if (!processOnly) {
                 for (filename, len) in filesToProcess {
-                    let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename);
-                    let uploadRequest = UploadRequest(fileName: filename, filePath: filePath.path);
+                    let filePath = DataStorageManager.uploadDataDirectory().appendingPathComponent(filename)
+                    let uploadRequest = UploadRequest(fileName: filename, filePath: filePath.path)
                     uploadChain = uploadChain.then {_ -> Promise<Bool> in
                         log.info("Uploading: \(filename)")
                         return ApiManager.sharedInstance.makeMultipartUploadRequest(uploadRequest, file: filePath).then { _ -> Promise<Bool> in
-                            log.info("Finished uploading: \(filename), removing.");
+                            log.info("Finished uploading: \(filename), removing.")
                             AppEventManager.sharedInstance.logAppEvent(event: "uploaded", msg: "Uploaded data file", d1: filename)
                             numFiles = numFiles + 1
-                            try fileManager.removeItem(at: filePath);
+                            try fileManager.removeItem(at: filePath)
                             storageInUse = storageInUse - len
                             filesToProcess.removeValue(forKey: filename)
-                            return Promise.value(true);
+                            return Promise.value(true)
                         }
                     }.recover { error -> Promise<Bool> in
                         AppEventManager.sharedInstance.logAppEvent(event: "upload_file_failed", msg: "Failed Uploaded data file", d1: filename)
@@ -883,7 +896,7 @@ class StudyManager {
                 return Promise.value(true)
             }
         }.then { (results: Bool) -> Promise<Void> in
-            log.info("OK uploading \(numFiles). \(results)");
+            log.info("OK uploading \(numFiles). \(results)")
             log.info("Total Size of uploads: \(size)")
             AppEventManager.sharedInstance.logAppEvent(event: "upload_complete", msg: "Upload Complete", d1: String(numFiles))
             if let study = self.currentStudy {
