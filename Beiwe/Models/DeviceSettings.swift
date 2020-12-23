@@ -9,9 +9,9 @@ import ObjectMapper
 // Note that while it's related to PermissionStatus, it's not the same and it mainly deals with settings coming from the backend
 enum DevicePermission: String {
     case requested // initial state... also "undetermined" state
-    case denied // when a user explicitly denies
-    case enabled // when a user grants the permission
-    case disabled // when a data stream is unused OR no longer needed
+    case denied    // when a user explicitly denies
+    case enabled   // when a user grants the permission
+    case disabled  // when a data stream is unused OR no longer needed
 
     func isRequested() -> Bool { self == .requested }
     func isDenied() -> Bool { self == .denied }
@@ -39,6 +39,7 @@ struct DeviceSettings: Mappable {
     }
 
     // Mappable
+    // swiftlint:disable operator_usage_whitespace
     mutating func mapping(map: Map) {
         accelerometer <- map["device_settings.accelerometer"]
         bluetooth     <- map["device_settings.bluetooth"]
@@ -53,5 +54,6 @@ struct DeviceSettings: Mappable {
         motion        <- map["device_settings.devicemotion"]
         reachability  <- map["device_settings.reachability"]
     }
+    // swiftlint:enable operator_usage_whitespace
 
 }

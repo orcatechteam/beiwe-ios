@@ -24,11 +24,12 @@ class MainViewController: UIViewController {
     @IBOutlet var activeSurveyHeader: UIView!
     @IBOutlet var emptySurveyHeader: UIView!
     @IBOutlet weak var surveyTableView: UITableView!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
         self.navigationController?.presentTransparentNavigationBar();
-        let leftImage : UIImage? = UIImage(named:"ic-user")!.withRenderingMode(.alwaysOriginal);
+        let leftImage: UIImage? = UIImage(named:"ic-user")!.withRenderingMode(.alwaysOriginal);
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: leftImage, style: UIBarButtonItem.Style.plain, target: self, action: #selector(userButton))
         self.navigationController?.navigationBar.tintColor = UIColor.white
         self.navigationItem.rightBarButtonItem = nil;
@@ -118,7 +119,6 @@ class MainViewController: UIViewController {
         }
 
     }
-
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()

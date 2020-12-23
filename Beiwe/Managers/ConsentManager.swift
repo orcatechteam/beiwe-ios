@@ -44,7 +44,10 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
         instructionStep.title = "Permissions"
         let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps.isRequested() ?? false
         if gpsNeeded {
-            instructionStep.text = "Beiwe needs access to your location for the passive data gathering capabilities of this app. Beiwe will also send you notifications to notify you of new surveys."
+            instructionStep.text = """
+                Beiwe needs access to your location for the passive data gathering capabilities of this app. 
+                Beiwe will also send you notifications to notify you of new surveys.
+                """
         } else {
             instructionStep.text = "Beiwe needs permission to send you notifications to notify you of new surveys or updates."
         }
@@ -54,7 +57,10 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
     var WarningStep: ORKStep {
         let instructionStep = ORKInstructionStep(identifier: StepIds.WarningStep.rawValue)
         instructionStep.title = "Warning"
-        instructionStep.text = "Permission to access your location is required to correctly gather the data required for this study.  To participate in this study we highly recommend you go back and allow this application to access your location."
+        instructionStep.text = """
+            Permission to access your location is required to correctly gather the data required for this study.  
+            To participate in this study we highly recommend you go back and allow this application to access your location.
+            """
         return instructionStep
     }
 
@@ -224,6 +230,7 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
                 let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps.isRequested() ?? false
                 if !gpsNeeded {
                     stepViewController.goForward()
+                    StudyManager.sharedInstance.handleLocationPermissionStatus(.denied)
                 } else {
                     if Permission.locationAlways.status == .authorized {
                         stepViewController.goForward()

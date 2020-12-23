@@ -22,8 +22,10 @@ struct UploadSettingsRequest: Mappable, ApiRequest {
     }
 
     // Mappable
+    // swiftlint:disable operator_usage_whitespace
     mutating func mapping(map: Map) {
         settings           <- map["settings"]
     }
+    // swiftlint:enable operator_usage_whitespace
 
 }

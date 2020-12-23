@@ -321,11 +321,11 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     }
 
     func handleLocationPermission(status: PermissionStatus) {
-        log.info("permission for gps was: `\(status)`")
+        log.info("AppDelegate.handleLocationPerm//status: `\(status)`")
         self.transitionToCurrentAppState()
-        guard let study = StudyManager.sharedInstance.currentStudy, study.studySettings != nil else {
-            return
+        guard let study = StudyManager.sharedInstance.currentStudy, let _ = study.studySettings else {
+            return;
         }
-        StudyManager.sharedInstance.handleLocationPermissionStatus(status: status)
+        StudyManager.sharedInstance.handleLocationPermissionStatus(status)
     }
 }

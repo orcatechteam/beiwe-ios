@@ -71,15 +71,15 @@ class RegisterViewController: FormViewController {
                     }
                     PKHUD.sharedHUD.dimsBackground = true
                     PKHUD.sharedHUD.userInteractionOnUnderlyingViewsEnabled = false
-                    HUD.show(.progress);
+                    HUD.show(.progress)
                     let formValues = self.form.values()
-                    let patientId: String? = formValues["patientId"] as! String?
+                    let patientId: String? = formValues["patientId"] as? String? ?? ""
                     // let phoneNumber: String? = formValues["phone"] as! String?
                     let phoneNumber: String? = "NOT_SUPPLIED"
-                    let newPassword: String? = formValues["password"] as! String?
-                    let tempPassword: String? = formValues["tempPassword"] as! String?
+                    let newPassword: String? = formValues["password"] as? String? ?? ""
+                    let tempPassword: String? = formValues["tempPassword"] as? String? ?? ""
                     if let patientId = patientId, let phoneNumber = phoneNumber, let newPassword = newPassword {
-                        self._registerStudy(
+                        self.registerStudy(
                                 patientId: patientId,
                                 phoneNumber: phoneNumber,
                                 tempPassword: tempPassword,
@@ -109,35 +109,46 @@ class RegisterViewController: FormViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    func _createStudy(phoneNumber: String, patientId: String, studySettings: StudySettings) -> Promise<Study> {
-        let study = Study(patientPhone: phoneNumber, patientId: patientId, studySettings: studySettings, apiUrl: Constants.apiUrl);
+    private func createStudy(phoneNumber: String, patientId: String, studySettings: StudySettings) -> Promise<Study> {
+        let study = Study(
+                patientPhone: phoneNumber,
+                patientId: patientId,
+                studySettings: studySettings,
+                apiUrl: Constants.apiUrl
+        )
         study.clinicianPhoneNumber = ""
         study.raPhoneNumber = ""
         if studySettings.fuzzGps {
-            study.fuzzGpsLatitudeOffset = self._generateLatitudeOffset()
-            study.fuzzGpsLongitudeOffset = self._generateLongitudeOffset()
+            study.fuzzGpsLatitudeOffset = self.generateLatitudeOffset()
+            study.fuzzGpsLongitudeOffset = self.generateLongitudeOffset()
         }
         return self.db.save(study)
     }
 
-    func _registerStudy(patientId: String, phoneNumber: String, tempPassword: String?, newPassword: String ) {
+    private func registerStudy(patientId: String, phoneNumber: String, tempPassword: String?, newPassword: String ) {
+        log.info("RegisterViewController._registerStudy...")
         let newBase64Password = Crypto.sharedInstance.sha256Base64URL(newPassword)
-        let registerStudyRequest = RegisterStudyRequest(patientId: patientId, phoneNumber: phoneNumber, newPassword: newBase64Password)
+        let registerStudyRequest = RegisterStudyRequest(
+                patientId: patientId,
+                phoneNumber: phoneNumber,
+                newPassword: newBase64Password
+        )
         ApiManager.sharedInstance.password = tempPassword ?? ""
         ApiManager.sharedInstance.patientId = patientId
         ApiManager.sharedInstance.makePostRequest(registerStudyRequest).map { (studySettings, _) in
             PersistentPasswordManager.sharedInstance.storePassword(newPassword)
+            print("RegisterViewController._registerStudy//makePostRequest: studySettings: `\(studySettings.toJSON())`")
             return studySettings
         }.then { studySettings in
             StudyManager.sharedInstance.purgeStudies().then { _ in
-                self._createStudy(phoneNumber: phoneNumber, patientId: patientId, studySettings: studySettings)
+                self.createStudy(phoneNumber: phoneNumber, patientId: patientId, studySettings: studySettings)
             }
         }.map { _ in
             HUD.flash(.success, delay: 1)
         }.then { _ -> Promise<Bool> in
             StudyManager.sharedInstance.loadDefaultStudy()
         }.done { _ in
-            self._dismiss()
+            self.handleDismiss()
         }.catch { error -> Void in
             print("error received from register: \(error)")
             var delay = 2.0
@@ -165,7 +176,7 @@ class RegisterViewController: FormViewController {
         }
     }
 
-    func _dismiss() {
+    private func handleDismiss() {
         AppDelegate.sharedInstance().isLoggedIn = true
         if let dismiss = self.dismiss {
             dismiss(true)
@@ -177,9 +188,9 @@ class RegisterViewController: FormViewController {
     /*
      Generates a random offset between -1 and 1 (thats not between -0.2 and 0.2)
     */
-    func _generateLatitudeOffset() -> Double {
+    private func generateLatitudeOffset() -> Double {
         var ran = Double.random(in: -1...1)
-        while(ran <= 0.2 && ran >= -0.2) {
+        while ran <= 0.2 && ran >= -0.2 {
             ran = Double.random(in: -1...1)
         }
         return ran
@@ -188,7 +199,7 @@ class RegisterViewController: FormViewController {
     /*
      Generates a random offset between -180 and 180 (thats not between -10 and 10)
     */
-    func _generateLongitudeOffset() -> Double {
+    private func generateLongitudeOffset() -> Double {
         var ran = Double.random(in: -180...180)
         while ran <= 10 && ran >= -10 {
             ran = Double.random(in: -180...180)
