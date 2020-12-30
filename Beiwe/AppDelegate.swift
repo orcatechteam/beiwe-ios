@@ -10,9 +10,9 @@ import UIKit
 import Fabric
 import Crashlytics
 import PromiseKit
-import CoreMotion
+import CoreMotion;
 import ReachabilitySwift
-import ResearchKit
+import ResearchKit;
 import XCGLogger
 import EmitterKit
 import UserNotifications
@@ -24,87 +24,88 @@ let log = XCGLogger(identifier: "advancedLogger", includeDefaultDestinations: fa
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-    var storyboard: UIStoryboard?
-    var modelVersionId = ""
-    let motionManager = CMMotionManager()
-    var reachability: Reachability?
-    var currentRootView: String? = "launchScreen"
-    var isLoggedIn: Bool = false
-    var timeEnteredBackground: Date?
-    var canOpenTel = false
-    let debugEnabled  = _isDebugAssertConfiguration()
+    var storyboard: UIStoryboard?;
+    var modelVersionId = "";
+    let motionManager = CMMotionManager();
+    var reachability: Reachability?;
+    var currentRootView: String? = "launchScreen";
+    var isLoggedIn: Bool = false;
+    var timeEnteredBackground: Date?;
+    var canOpenTel = false;
+    let debugEnabled  = _isDebugAssertConfiguration();
     let lockEvent = Event<Bool>()
-    let hideMainContent = true
+    let hideMainContent = true;
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         UNUserNotificationCenter.current().delegate = self
 
-        self.setupLogging()
+        self.setupLogging();
 
-        AppEventManager.sharedInstance.didLaunch(launchOptions: launchOptions)
+        AppEventManager.sharedInstance.didLaunch(launchOptions: launchOptions);
 
-        self.setupReachability()
-        self.setModelVersionID()
-        self.checkTelephony()
-        // self.setupColors()
+        self.setupReachability();
+        self.setModelVersionID();
+        self.checkTelephony();
+        //self.setupColors();
 
-        storyboard = UIStoryboard(name: "Main", bundle: Bundle.main)
+        storyboard = UIStoryboard(name: "Main", bundle: Bundle.main);
 
-        self.setupWindow()
+        self.setupWindow();
 
         Recline.shared.open().then { _ -> Promise<Bool> in
-            print("Database opened")
-            return StudyManager.sharedInstance.loadDefaultStudy()
+            print("Database opened");
+            return StudyManager.sharedInstance.loadDefaultStudy();
         }.done { _ -> Void in
-            self.transitionToCurrentAppState()
-        }.catch { _ -> Void in
-            print("Database open failed.")
+            self.transitionToCurrentAppState();
+        }.catch { err -> Void in
+            print("Database open failed.");
         }
 
         return true
     }
 
-    func changeRootViewControllerWithIdentifier(_ identifier: String!) {
-        guard identifier == currentRootView else {
-            return
+    func changeRootViewControllerWithIdentifier(_ identifier:String!) {
+        if (identifier == currentRootView) {
+            return;
         }
-        let desiredViewController:UIViewController = (self.storyboard?.instantiateViewController(withIdentifier: identifier))!
+        let desiredViewController:UIViewController = (self.storyboard?.instantiateViewController(withIdentifier: identifier))!;
 
-        changeRootViewController(desiredViewController, identifier: identifier)
+        changeRootViewController(desiredViewController, identifier: identifier);
     }
 
     func changeRootViewController(_ desiredViewController: UIViewController, identifier: String? = nil) {
-        currentRootView = identifier
+        currentRootView = identifier;
 
-        let snapshot: UIView = (self.window?.snapshotView(afterScreenUpdates: true))!
-        desiredViewController.view.addSubview(snapshot)
+        let snapshot:UIView = (self.window?.snapshotView(afterScreenUpdates: true))!
+        desiredViewController.view.addSubview(snapshot);
 
-        self.window?.rootViewController = desiredViewController
+        self.window?.rootViewController = desiredViewController;
 
         UIView.animate(withDuration: 0.3, animations: {() in
-            snapshot.layer.opacity = 0
-            snapshot.layer.transform = CATransform3DMakeScale(1.5, 1.5, 1.5)
-            }, completion: { _ in
-                snapshot.removeFromSuperview()
-        })
+            snapshot.layer.opacity = 0;
+            snapshot.layer.transform = CATransform3DMakeScale(1.5, 1.5, 1.5);
+            }, completion: {
+                (value: Bool) in
+                snapshot.removeFromSuperview();
+        });
     }
-
-    func setupColors() {
-        UIView.appearance(whenContainedInInstancesOf: [ORKTaskViewController.self]).tintColor = AppColors.tintColor
+    
+    func setupColors(){
+        UIView.appearance(whenContainedInInstancesOf: [ORKTaskViewController.self]).tintColor = AppColors.tintColor;
     }
-
-    func setupWindow() {
-        self.window = UIWindow(frame: UIScreen.main.bounds)
+    
+    func setupWindow(){
+        self.window = UIWindow(frame: UIScreen.main.bounds);
         if let win = self.window {
-            win.rootViewController = UIStoryboard(name: "LaunchScreen", bundle: Bundle.main).instantiateViewController(withIdentifier: "launchScreen")
+            win.rootViewController = UIStoryboard(name: "LaunchScreen", bundle: Bundle.main).instantiateViewController(withIdentifier: "launchScreen");
             win.makeKeyAndVisible()
         }
     }
 
-    func setupLogging() {
+    func setupLogging(){
         // Override point for customization after application launch.
         Fabric.with([Crashlytics.self])
-
+        
         // Create a destination for the system console log (via NSLog)
         let systemLogDestination = AppleSystemLogDestination(owner: log, identifier: "advancedLogger.systemLogDestination")
 
@@ -117,7 +118,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         systemLogDestination.showFileName = false // true
         systemLogDestination.showLineNumber = false // true
         systemLogDestination.showDate = true
-
+        
         // Add the destination to the logger
         log.add(destination: systemLogDestination)
 
@@ -133,11 +134,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Add the destination to the logger
         log.add(destination: crashlyticsLogDestination)
-
+        
         log.logAppDetails()
     }
-
-    func setupReachability() {
+    
+    func setupReachability(){
         do {
             reachability = Reachability()
             try reachability!.startNotifier()
@@ -145,47 +146,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             log.error("Unable to create or start Reachability")
         }
     }
-
-    func setModelVersionID() {
-        let uiDevice = UIDevice.current
-        modelVersionId = UIDevice.current.model + "/" + UIDevice.current.systemVersion
-        log.info("AppUUID: \(PersistentAppUUID.sharedInstance.uuid)")
-        log.info("Name: \(uiDevice.name)")
-        log.info("SystemName: \(uiDevice.systemName)")
-        log.info("SystemVersion: \(uiDevice.systemVersion)")
-        log.info("Model: \(uiDevice.model)")
-        log.info("Platform: \(platform())")
+    
+    func setModelVersionID(){
+        let uiDevice = UIDevice.current;
+        modelVersionId = UIDevice.current.model + "/" + UIDevice.current.systemVersion;
+        log.info("AppUUID: \(PersistentAppUUID.sharedInstance.uuid)");
+        log.info("Name: \(uiDevice.name)");
+        log.info("SystemName: \(uiDevice.systemName)");
+        log.info("SystemVersion: \(uiDevice.systemVersion)");
+        log.info("Model: \(uiDevice.model)");
+        log.info("Platform: \(platform())");
     }
-
-    func checkTelephony() {
-        canOpenTel = UIApplication.shared.canOpenURL(URL(string: "tel:6175551212")!)
+    
+    func checkTelephony(){
+        canOpenTel = UIApplication.shared.canOpenURL(URL(string: "tel:6175551212")!);
     }
 
     func transitionToCurrentAppState() {
-        log.info("# # >> AppDelegate.transitionToCurrentAppState << # #")
-        log.info("debug enabled: `\(AppDelegate.sharedInstance().debugEnabled)`")
-
         if let currentStudy = StudyManager.sharedInstance.currentStudy {
-            log.info("currentStudy.participantConsented: `\(currentStudy.participantConsented)`")
-            if currentStudy.participantConsented {
-                StudyManager.sharedInstance.startStudyDataServices()
+            if (currentStudy.participantConsented) {
+                StudyManager.sharedInstance.startStudyDataServices();
             }
-            if !isLoggedIn {
+            if (!isLoggedIn) {
                 // Load up the log in view
-                changeRootViewControllerWithIdentifier("login")
+                changeRootViewControllerWithIdentifier("login");
             } else {
                 // We are logged in, so if we've completed onboarding load main interface
                 // Otherwise continue the onboarding.
-                if currentStudy.participantConsented {
-                    changeRootViewControllerWithIdentifier("mainView")
+                if (currentStudy.participantConsented) {
+                    changeRootViewControllerWithIdentifier("mainView");
                 } else {
-                    changeRootViewController(ConsentManager().consentViewController)
+                    changeRootViewController(ConsentManager().consentViewController);
                 }
             }
         } else {
             // If there is no study loaded, then it's obvious.  We need the onboarding flow
             // from the beginning.
-            changeRootViewController(OnboardingManager().onboardingViewController)
+            changeRootViewController(OnboardingManager().onboardingViewController);
         }
     }
 
@@ -203,35 +200,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
         log.info("applicationDidEnterBackground")
-        timeEnteredBackground = Date()
+        timeEnteredBackground = Date();
         AppEventManager.sharedInstance.logAppEvent(event: "background", msg: "Application entered background")
 
     }
 
     func checkPasswordAndLogin(_ password: String) -> Bool {
         if let storedPassword = PersistentPasswordManager.sharedInstance.passwordForStudy(), storedPassword.count > 0 {
-            if password == storedPassword {
-                ApiManager.sharedInstance.password = storedPassword
-                isLoggedIn = true
-                return true
+            if (password == storedPassword) {
+                ApiManager.sharedInstance.password = storedPassword;
+                isLoggedIn = true;
+                return true;
             }
         }
-        return false
+        return false;
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         log.info("applicationWillEnterForeground")
         // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
-        print("ApplicationWillEnterForeground")
+        print("ApplicationWillEnterForeground");
         if let timeEnteredBackground = timeEnteredBackground, let currentStudy = StudyManager.sharedInstance.currentStudy, let studySettings = currentStudy.studySettings, isLoggedIn == true {
-            let loginExpires = timeEnteredBackground.addingTimeInterval(Double(studySettings.secondsBeforeAutoLogout))
-            if loginExpires.compare(Date()) == ComparisonResult.orderedAscending {
+            let loginExpires = timeEnteredBackground.addingTimeInterval(Double(studySettings.secondsBeforeAutoLogout));
+            if (loginExpires.compare(Date()) == ComparisonResult.orderedAscending) {
                 // expired.  Log 'em out
-                isLoggedIn = false
-                transitionToCurrentAppState()
+                isLoggedIn = false;
+                transitionToCurrentAppState();
             }
         } else {
-            isLoggedIn = false
+            isLoggedIn = false;
         }
     }
 
@@ -246,7 +243,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         log.info("applicationWillTerminate")
         AppEventManager.sharedInstance.logAppEvent(event: "terminate", msg: "Application terminating")
 
-        let dispatchGroup = DispatchGroup()
+        let dispatchGroup = DispatchGroup();
 
         dispatchGroup.enter()
         StudyManager.sharedInstance.stop().map(on: DispatchQueue.global(qos: .default)) { _ in
@@ -255,7 +252,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             dispatchGroup.leave()
         }
 
-        dispatchGroup.wait()
+        dispatchGroup.wait();
         log.info("applicationWillTerminate exiting")
     }
 
@@ -265,45 +262,46 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func displayCurrentMainView() {
-        var view: String
-        if StudyManager.sharedInstance.currentStudy != nil {
-            view = "initialStudyView"
+        var view: String;
+        if let _ = StudyManager.sharedInstance.currentStudy {
+            view = "initialStudyView";
         } else {
-            view = "registerView"
+            view = "registerView";
         }
         self.window = UIWindow(frame: UIScreen.main.bounds)
 
-        self.window?.rootViewController = storyboard!.instantiateViewController(withIdentifier: view) as UIViewController?
+        self.window?.rootViewController = storyboard!.instantiateViewController(withIdentifier: view) as UIViewController?;
 
         self.window!.makeKeyAndVisible()
     }
 
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         log.info("applicationWillFinishLaunchingWithOptions")
-        return true
+        return true;
 
     }
 
     func applicationProtectedDataDidBecomeAvailable(_ application: UIApplication) {
-        log.info("applicationProtectedDataDidBecomeAvailable")
-        lockEvent.emit(false)
+        log.info("applicationProtectedDataDidBecomeAvailable");
+        lockEvent.emit(false);
         AppEventManager.sharedInstance.logAppEvent(event: "unlocked", msg: "Phone/keystore unlocked")
     }
 
     func applicationProtectedDataWillBecomeUnavailable(_ application: UIApplication) {
-        log.info("applicationProtectedDataWillBecomeUnavailable")
-        lockEvent.emit(true)
+        log.info("applicationProtectedDataWillBecomeUnavailable");
+        lockEvent.emit(true);
         AppEventManager.sharedInstance.logAppEvent(event: "locked", msg: "Phone/keystore locked")
+        
     }
-
+    
     /* Crashlytics functions -- future */
 
     func setDebuggingUser(_ username: String) {
         // TODO: Use the current user's information
         // You can call any combination of these three methods
-        // Crashlytics.sharedInstance().setUserEmail("user@fabric.io")
-        Crashlytics.sharedInstance().setUserIdentifier(username)
-        // Crashlytics.sharedInstance().setUserName("Test User")
+        //Crashlytics.sharedInstance().setUserEmail("user@fabric.io")
+        Crashlytics.sharedInstance().setUserIdentifier(username);
+        //Crashlytics.sharedInstance().setUserName("Test User")
     }
 
     func crash() {
@@ -312,7 +310,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 extension AppDelegate: UNUserNotificationCenterDelegate {
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void)
+    {
         let notificationIdentifier = response.notification.request.identifier
         if notificationIdentifier == "settingsUpdatedNotification" {
             Permission.locationAlways.request(handleLocationPermission)

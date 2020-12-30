@@ -16,6 +16,12 @@ enum StepIds: String {
     case WarningStep = "WarningStep"
     case VisualConsent = "VisualConsentStep"
     case ConsentReview = "ConsentReviewStep"
+    case AdditionalPermissionsInstruction
+    case AdditionalPermissions
+}
+
+enum PermKey: String {
+    case motion, power, reachability
 }
 
 class WaitForPermissionsRule: ORKStepNavigationRule {
@@ -41,14 +47,15 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
 
     var PermissionsStep: ORKStep {
         let instructionStep = ORKInstructionStep(identifier: StepIds.Permission.rawValue)
-        instructionStep.title = "Permissions"
         let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps.isRequested() ?? false
         if gpsNeeded {
+            instructionStep.title = "Location & Notification Permissions"
             instructionStep.text = """
                 Beiwe needs access to your location for the passive data gathering capabilities of this app. 
                 Beiwe will also send you notifications to notify you of new surveys.
                 """
         } else {
+            instructionStep.title = "Notification Permission"
             instructionStep.text = "Beiwe needs permission to send you notifications to notify you of new surveys or updates."
         }
         return instructionStep
@@ -64,17 +71,64 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
         return instructionStep
     }
 
+    var AdditionalPermissionsInstructionStep: ORKStep {
+        let instructionStep = ORKInstructionStep(identifier: StepIds.AdditionalPermissionsInstruction.rawValue)
+        instructionStep.title = "Permission Request"
+        instructionStep.text = """
+           Beiwe needs access to the device sensor data. The following screens will request permission to access your data.
+           """
+        return instructionStep
+    }
+
     var permissionStatus: [PermissionStatus] = []
     var expectedPermissionCount: Int = 0
+    var additionalQuestions = [PermKey: String]()
 
     override init() {
         log.info("# # >> ConsentMgr.init << # #")
         super.init()
 
         // Set up permissions
+        let studySettings = StudyManager.sharedInstance.currentStudy?.studySettings
+        let additionalPerms: [PermKey: DevicePermission?] = [
+            .motion: studySettings?.motion,
+            .power: studySettings?.powerState,
+            .reachability: studySettings?.reachability,
+        ]
+        let questions: [PermKey: String] = [
+            .motion: "Allow Beiwe to access the device motion information?",
+            .power: "Allow Beiwe to access the device power information?",
+            .reachability: "Allow Beiwe to know whether the device is connected to the Internet?",
+        ]
+
+        additionalPerms.forEach{ permKey, studyPerm in
+            if let isRequested = studyPerm?.isRequested(), isRequested {
+                additionalQuestions[permKey] = questions[permKey] ?? ""
+            }
+        }
 
         var steps = [ORKStep]()
         if !hasRequiredPermissions() {
+            if additionalQuestions.count > 0 {
+                // @TODO [~] Add additional steps for other perms
+                // 1) loop through settings to see if the permission needs to be requested from user
+                // 2) add to the formItems
+                steps += [AdditionalPermissionsInstructionStep]
+
+                let additionalPerms = ORKFormStep(identifier: StepIds.AdditionalPermissions.rawValue)
+                additionalPerms.formItems = additionalQuestions.map({ arg -> ORKFormItem in
+                    let (permKey, question) = arg
+                    return ORKFormItem(
+                            identifier: permKey.rawValue,
+                            text: question,
+                            answerFormat: ORKAnswerFormat.booleanAnswerFormat(withYesString: "Allow", noString: "Deny"),
+                            optional: false
+                    )
+                })
+                additionalPerms.isOptional = false
+                steps += [additionalPerms]
+            }
+
             steps += [PermissionsStep]
             steps += [ORKWaitStep(identifier: StepIds.WaitForPermissions.rawValue)]
             let gpsNeeded = StudyManager.sharedInstance.currentStudy?.studySettings?.gps.isRequested() ?? false
@@ -161,6 +215,7 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
     }
 
     func hasRequiredPermissions() -> Bool {
+        // @TODO [~] Rework this to check studySettings for "required" perms...
         (Permission.notifications.status == .authorized && Permission.locationAlways.status == .authorized)
     }
 
@@ -179,6 +234,42 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
     }
 
     func taskViewController(_ taskViewController: ORKTaskViewController, didChange result: ORKTaskResult) {
+        guard let study = StudyManager.sharedInstance.currentStudy else {
+            return
+        }
+        for stepResult in result.results! {
+            let sResult = stepResult as? ORKStepResult
+            if sResult?.identifier == StepIds.AdditionalPermissions.rawValue
+                       && ((sResult?.results?.count ?? 0) == additionalQuestions.count) {
+                for questionResult in sResult?.results! ?? [] {
+                    let qResult = questionResult as? ORKBooleanQuestionResult
+                    let answer = qResult?.answer as? Int
+                    if answer == nil {
+                        continue
+                    }
+                    let identifier = PermKey(rawValue: qResult?.identifier ?? "")
+                    log.info("ConsentMgr.taskViewController//answer for \(identifier?.rawValue): \(answer)")
+                    switch identifier {
+                    case .motion:
+                        if answer == 0 {
+                            study.studySettings?.motion = .denied
+                            study.studySettings?.accelerometer = .denied
+                        } else {
+                            study.studySettings?.motion = .requested
+                            study.studySettings?.accelerometer = .requested
+                        }
+                    case .power:
+                        study.studySettings?.powerState = answer == 0 ? .denied : .requested
+                    case .reachability:
+                        study.studySettings?.reachability = answer == 0 ? .denied : .requested
+                    default:
+                        log.debug("triggered the default case in the additional permission check")
+                    }
+                }
+            }
+        }
+        Recline.shared.save(study).done { _ in
+        }
         return
     }
 
@@ -204,10 +295,10 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
     }
 
     func taskViewController(_ taskViewController: ORKTaskViewController, stepViewControllerWillAppear stepViewController: ORKStepViewController) {
-        log.info("ConsentMgr.taskViewController")
         stepViewController.cancelButtonItem!.title = "Leave Study"
 
         if let identifier = StepIds(rawValue: stepViewController.step?.identifier ?? "") {
+            log.info("ConsentMgr.taskViewController//stepViewController//identifier: `\(identifier)`")
             switch identifier {
             case .WaitForPermissions:
                 self.expectedPermissionCount = 1
@@ -242,6 +333,8 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
                 if hasRequiredPermissions() {
                     stepViewController.backButtonItem = nil
                 }
+            case .AdditionalPermissionsInstruction, .AdditionalPermissions:
+                stepViewController.continueButtonTitle = "Continue"
             default:
                 break
             }

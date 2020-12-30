@@ -688,6 +688,7 @@ class StudyManager {
             log.info("incomingDeviceSettings: \(incomingDeviceSettings)")
             study.deviceSettings = incomingDeviceSettings
             var startDataServices = false
+            var restartConsent = false
 
             if incomingDeviceSettings.accelerometer != studySettings.accelerometer {
                 var updateAccelPerm = false
@@ -704,6 +705,7 @@ class StudyManager {
                     // 2) flip .disabled to .requested
                     updateAccelPerm = true
                     startDataServices = true
+                    restartConsent = true
                 case (.enabled, .disabled):
                     // the accel perm was enabled and will now be disabled
                     // 1) remove the data collection
@@ -727,6 +729,7 @@ class StudyManager {
                 case (.disabled, .requested):
                     log.info("motion disabled > requested...")
                     updateMotionPerm = true
+                    restartConsent = true
                 case (.enabled, .disabled):
                     log.info("motion enabled > disabled")
                     updateMotionPerm = true
@@ -766,6 +769,7 @@ class StudyManager {
                 case (.disabled, .requested):
                     log.info("gyro disabled > requested...")
                     updateGyroPerm = true
+                    restartConsent = true
                 case (.enabled, .disabled):
                     log.info("gyro enabled > disabled")
                     updateGyroPerm = true
@@ -785,6 +789,7 @@ class StudyManager {
                 case (.disabled, .requested):
                     log.info("magnetometer disabled > requested...")
                     updateMagnetometerPerm = true
+                    restartConsent = true
                 case (.enabled, .disabled):
                     log.info("magnetometer enabled > disabled")
                     updateMagnetometerPerm = true
@@ -804,6 +809,7 @@ class StudyManager {
                 case (.disabled, .requested):
                     log.info("powerState disabled > requested...")
                     updatePowerStatePerm = true
+                    restartConsent = true
                 case (.enabled, .disabled):
                     log.info("powerState enabled > disabled")
                     updatePowerStatePerm = true
@@ -823,6 +829,7 @@ class StudyManager {
                 case (.disabled, .requested):
                     log.info("proximity disabled > requested...")
                     updateProximityPerm = true
+                    restartConsent = true
                 case (.enabled, .disabled):
                     log.info("proximity enabled > disabled")
                     updateProximityPerm = true
@@ -842,6 +849,7 @@ class StudyManager {
                 case (.disabled, .requested):
                     log.info("reachability disabled > requested...")
                     updateReachabilityPerm = true
+                    restartConsent = true
                 case (.enabled, .disabled):
                     log.info("reachability enabled > disabled")
                     updateReachabilityPerm = true
@@ -855,9 +863,13 @@ class StudyManager {
                 }
             }
 
-            if startDataServices, let studySettings = study.studySettings {
-                self.startDataServices(studySettings)
+            if restartConsent {
+                study.participantConsented = false
             }
+
+//            if startDataServices, let studySettings = study.studySettings {
+//                self.startDataServices(studySettings)
+//            }
 
             return Recline.shared.save(study).asVoid()
         }.then { _ -> Promise<Bool> in
