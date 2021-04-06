@@ -68,7 +68,8 @@ class ApiManager {
         let headers = [
             "Authorization": "Bearer " + Crypto.sharedInstance.sha256Base64URL(PersistentAppUUID.sharedInstance.uuid),
             "Beiwe-Api-Version": "3",
-            "Accept": "application/vnd.beiwe.api.v3, application/json"
+            "Accept": "application/vnd.beiwe.api.v3, application/json",
+            "Origin": "beiwe-app-ios",
         ]
         return headers;
     }
@@ -89,6 +90,7 @@ class ApiManager {
             var request = try! URLRequest(url: Constants.apiUrl + T.apiEndpoint, method: .post, headers: headers)
             request = try! URLEncoding.default.encode(request, with: parameters);
             request.setValue(self.digestHeaderParameter(request: request, nonce: nonce), forHTTPHeaderField: "X-Content-Digest");
+            request.setValue("beiwe-app-ios", forHTTPHeaderField: "Origin");
             return request
         }.then { request -> Promise<(T.ApiReturnType, Int)> in
             return self.doPostRequest(requestObject, request: request);
@@ -193,6 +195,7 @@ class ApiManager {
             var request = try! URLRequest(url: Constants.apiUrl + T.apiEndpoint, method: .post, headers: headers)
             request = try! URLEncoding.default.encode(request, with: parameters);
             request.setValue(self.digestHeaderParameter(request: request, nonce: nonce), forHTTPHeaderField: "X-Content-Digest");
+            request.setValue("beiwe-app-ios", forHTTPHeaderField: "Origin");
             return request
         }.then { request -> Promise<([T.ApiReturnType], Int)> in
             return self.doArrayPostRequest(requestObject, request: request);
