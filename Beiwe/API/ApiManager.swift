@@ -83,10 +83,11 @@ class ApiManager {
         parameters["password"] = (password == nil) ? hashedPassword : Crypto.sharedInstance.sha256Base64URL(password!);
         parameters["device_id"] = PersistentAppUUID.sharedInstance.uuid;
         parameters["patient_id"] = patientId;
-        let headers = generateHeaders(password);
+        var headers = generateHeaders(password);
         return firstly {
             getNonce(headers:headers);
         }.map { nonce in
+            headers["X-Content-Nonce"] = nonce
             var request = try! URLRequest(url: Constants.apiUrl + T.apiEndpoint, method: .post, headers: headers)
             request = try! URLEncoding.default.encode(request, with: parameters);
             request.setValue(self.digestHeaderParameter(request: request, nonce: nonce), forHTTPHeaderField: "X-Content-Digest");
@@ -299,6 +300,10 @@ class ApiManager {
     
     func doMultipartUploadRequest<T: ApiRequest>(_ requestObject: T, url: String, parameters: [String:Any], headers: [String:String], file: URL, nonce: String) -> Promise<(T.ApiReturnType, Int)> where T: Mappable {
         return Promise { seal in
+            var headersWithNonce = ["X-Content-Nonce":nonce]
+            for (k,v) in headers {
+                headersWithNonce.updateValue(v, forKey: k)
+            }
             Alamofire.upload(multipartFormData: { multipartFormData in
                     do {
                         for (k, v) in parameters {
@@ -311,7 +316,7 @@ class ApiManager {
                 },
                 to: url,
                 method: .post,
-                headers: headers,
+                headers: headersWithNonce,
                 encodingCompletion: { encodingResult in
                     switch encodingResult {
                     case .success(let upload, _, _):
