@@ -12,6 +12,14 @@ import EmitterKit
 import Hakuba
 import XLActionController
 
+extension UIImage {
+    func resized(to size: CGSize) -> UIImage {
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+}
+
 class MainViewController: UIViewController {
 
     var listeners: [Listener] = [];
@@ -27,7 +35,9 @@ class MainViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        log.info("MainViewCtrl.viewDidLoad...")
+
         self.navigationController?.presentTransparentNavigationBar();
         let leftImage: UIImage? = UIImage(named:"ic-user")!.withRenderingMode(.alwaysOriginal);
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: leftImage, style: UIBarButtonItem.Style.plain, target: self, action: #selector(userButton))
@@ -65,15 +75,48 @@ class MainViewController: UIViewController {
         refreshSurveys();
 
         if (AppDelegate.sharedInstance().hideMainContent) {
-            let lbl = UILabel()
-            lbl.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height)
-            lbl.textAlignment = .center
-            lbl.text = "Registration complete!\n\nYou may continue to use your device as you would normally."
-            lbl.numberOfLines = 4;
-            lbl.backgroundColor = .black
-            lbl.textColor = .white
-            self.view.addSubview(lbl)
+            showSetupCompleted()
         }
+    }
+
+    func showSetupCompleted() {
+        let orcatechTempImg = UIImage(named: "orcatech-temp")
+        let logoContainer = UIImageView()
+        logoContainer.image = orcatechTempImg?.resized(to: CGSize(width: 300, height: 300))
+        logoContainer.contentMode = .scaleAspectFit
+
+        let title = UILabel()
+        title.font = UIFont.preferredFont(forTextStyle: .largeTitle)
+        title.text = "Setup Completed"
+        title.textAlignment = .center
+
+        let body = UILabel()
+        body.font = UIFont.preferredFont(forTextStyle: .body)
+        body.textAlignment = .center
+        body.text = "You may continue to use your device as you would normally. Please leave this app open in the background."
+        body.numberOfLines = 3
+
+        let textStack = UIStackView(arrangedSubviews: [title, body])
+        textStack.axis = .vertical
+        textStack.spacing = 20
+        textStack.layoutMargins = UIEdgeInsets(top: 0, left: 30, bottom: 0, right: 30)
+        textStack.isLayoutMarginsRelativeArrangement = true
+
+        let menuButton = UIButton(type: .infoLight)
+        menuButton.setImage(UIImage(named: "menu-icon"), for: .normal)
+        menuButton.tintColor = .black
+        menuButton.addTarget(self, action: #selector(userButton), for: .touchUpInside)
+
+        let stackView = UIStackView(arrangedSubviews: [logoContainer, textStack, menuButton])
+        stackView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height)
+        stackView.backgroundColor = .white
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        stackView.distribution = .fillEqually
+        stackView.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: 40, right: 0)
+        stackView.isLayoutMarginsRelativeArrangement = true
+
+        self.view.addSubview(stackView)
     }
 
     func refreshSurveys() {
@@ -180,7 +223,8 @@ class MainViewController: UIViewController {
     
     @objc func userButton() {
         let actionController = BWXLActionController()
-        actionController.settings.cancelView.backgroundColor = AppColors.highlightColor
+        actionController.settings.cancelView.backgroundColor = .white
+        actionController.settings.cancelView.titleColor = .black
 
         actionController.headerData = nil;
 

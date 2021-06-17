@@ -41,11 +41,13 @@ open class BWXLCell: ActionCell {
     
     func initialize() {
         //backgroundColor = .clearColor()
-        backgroundColor = AppColors.Beiwe2.withAlphaComponent(0.8)
+//        backgroundColor = AppColors.Beiwe2.withAlphaComponent(0.8)
+        backgroundColor = .white.withAlphaComponent(0.8)
         let backgroundView = UIView()
         backgroundView.backgroundColor = UIColor.clear // UIColor.whiteColor().colorWithAlphaComponent(0.3)
         selectedBackgroundView = backgroundView
-        actionTitleLabel?.textColor = .white
+//        actionTitleLabel?.textColor = .white
+        actionTitleLabel?.textColor = .black
         actionTitleLabel?.textAlignment = .left
         
     }
