@@ -169,7 +169,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
             if (!isLoggedIn) {
                 // Load up the log in view
-                changeRootViewControllerWithIdentifier("login");
+//                changeRootViewControllerWithIdentifier("login");
+                changeRootViewControllerWithIdentifier("login2");
             } else {
                 // We are logged in, so if we've completed onboarding load main interface
                 // Otherwise continue the onboarding.

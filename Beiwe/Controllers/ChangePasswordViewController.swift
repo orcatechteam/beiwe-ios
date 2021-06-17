@@ -51,19 +51,19 @@ class ChangePasswordViewController: FormViewController {
                 $0.title = isForgotPassword ? "Temporary Password:" : "Current Password:"
                 let placeholder: String = String($0.title!.lowercased().dropLast())
                 $0.placeholder = placeholder
-                $0.rules = [RequiredRule()]
+                $0.customRules = [RequiredRule()]
                 $0.autoValidation = autoValidation
             }
             <<< SVPasswordRow("password") {
                 $0.title = "New Password:"
                 $0.placeholder = "Enter your new password";
-                $0.rules = [RequiredRule(), RegexRule(regex: Constants.passwordRequirementRegex, message: Constants.passwordRequirementDescription)]
+                $0.customRules = [RequiredRule(), RegexRule(regex: Constants.passwordRequirementRegex, message: Constants.passwordRequirementDescription)]
                 $0.autoValidation = autoValidation
             }
             <<< SVPasswordRow("confirmPassword") {
                 $0.title = "Confirm Password:"
                 $0.placeholder = "Confirm your new password";
-                $0.rules = [RequiredRule(), MinLengthRule(length: 1)]
+                $0.customRules = [RequiredRule(), MinLengthRule(length: 1)]
                 $0.autoValidation = autoValidation
             }
             <<< ButtonRow() {
@@ -122,7 +122,7 @@ class ChangePasswordViewController: FormViewController {
         }
         let passwordRow: SVPasswordRow? = form.rowBy(tag: "password");
         let confirmRow: SVPasswordRow? = form.rowBy(tag: "confirmPassword");
-        confirmRow!.rules = [ConfirmationRule(confirmField: passwordRow!.cell.textField)]
+        confirmRow!.customRules = [ConfirmationRule(confirmField: passwordRow!.cell.textField)]
 
 
 

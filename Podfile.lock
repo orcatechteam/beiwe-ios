@@ -1,13 +1,13 @@
 PODS:
-  - Alamofire (4.9.0)
+  - Alamofire (4.9.1)
   - couchbase-lite-ios (1.4.4):
     - couchbase-lite-ios/SQLite (= 1.4.4)
   - couchbase-lite-ios/SQLite (1.4.4)
   - Crashlytics (3.14.0):
     - Fabric (~> 1.10.2)
-  - DLLocalNotifications (0.08)
+  - DLLocalNotifications (0.09)
   - EmitterKit (5.2.2)
-  - Eureka (4.1.1)
+  - Eureka (5.3.3)
   - Fabric (1.10.2)
   - Hakuba (2.1.1)
   - IDZSwiftCommonCrypto (0.13.0)
@@ -15,29 +15,29 @@ PODS:
   - ObjcExceptionBridging (1.0.1):
     - ObjcExceptionBridging/ObjcExceptionBridging (= 1.0.1)
   - ObjcExceptionBridging/ObjcExceptionBridging (1.0.1)
-  - ObjectMapper (3.5.0)
+  - ObjectMapper (4.2.0)
   - Permission/Core (3.1.2)
   - Permission/Location (3.1.2):
     - Permission/Core
   - Permission/Notifications (3.1.2):
     - Permission/Core
   - PKHUD (5.4.0)
-  - PromiseKit (6.11.0):
-    - PromiseKit/CorePromise (= 6.11.0)
-    - PromiseKit/Foundation (= 6.11.0)
-    - PromiseKit/UIKit (= 6.11.0)
-  - PromiseKit/CorePromise (6.11.0)
-  - PromiseKit/Foundation (6.11.0):
+  - PromiseKit (6.15.3):
+    - PromiseKit/CorePromise (= 6.15.3)
+    - PromiseKit/Foundation (= 6.15.3)
+    - PromiseKit/UIKit (= 6.15.3)
+  - PromiseKit/CorePromise (6.15.3)
+  - PromiseKit/Foundation (6.15.3):
     - PromiseKit/CorePromise
-  - PromiseKit/UIKit (6.11.0):
+  - PromiseKit/UIKit (6.15.3):
     - PromiseKit/CorePromise
   - ReachabilitySwift (3)
-  - ResearchKit (1.5.2)
-  - SwiftLint (0.42.0)
+  - ResearchKit (2.1.0-beta)
+  - SwiftLint (0.43.1)
   - SwiftValidator (4.0.0)
-  - XCGLogger (7.0.0):
-    - XCGLogger/Core (= 7.0.0)
-  - XCGLogger/Core (7.0.0):
+  - XCGLogger (7.0.1):
+    - XCGLogger/Core (= 7.0.1)
+  - XCGLogger/Core (7.0.1):
     - ObjcExceptionBridging
   - XLActionController (5.0.2):
     - XLActionController/Core (= 5.0.2)
@@ -47,53 +47,57 @@ DEPENDENCIES:
   - Alamofire (~> 4.5)
   - couchbase-lite-ios
   - Crashlytics (~> 3.4)
-  - DLLocalNotifications
+  - DLLocalNotifications (from `/Users/jona/projects/sandbox/DLLocalNotifications`)
   - EmitterKit (~> 5.1)
-  - Eureka (= 4.1.1)
+  - Eureka
   - Hakuba (from `https://github.com/eskizyen/Hakuba.git`, branch `Swift3`)
   - IDZSwiftCommonCrypto (~> 0.9)
   - KeychainSwift (~> 8.0)
   - ObjectMapper (from `https://github.com/Hearst-DD/ObjectMapper.git`, branch `master`)
-  - Permission/Location
-  - Permission/Notifications
-  - PKHUD (from `https://github.com/pkluz/PKHUD.git`)
+  - Permission/Location (from `/Users/jona/projects/sandbox/Permission`)
+  - Permission/Notifications (from `/Users/jona/projects/sandbox/Permission`)
+  - PKHUD (from `/Users/jona/projects/sandbox/PKHUD`)
   - PromiseKit
   - ReachabilitySwift (~> 3)
-  - ResearchKit
+  - ResearchKit (from `https://github.com/ResearchKit/ResearchKit.git`, commit `b50e1d7`)
   - SwiftLint
   - SwiftValidator (from `https://github.com/jpotts18/SwiftValidator.git`, branch `master`)
   - XCGLogger (~> 7.0.0)
-  - XLActionController
+  - XLActionController (~> 5.0.1)
 
 SPEC REPOS:
   trunk:
     - Alamofire
     - couchbase-lite-ios
     - Crashlytics
-    - DLLocalNotifications
     - EmitterKit
     - Eureka
     - Fabric
     - IDZSwiftCommonCrypto
     - KeychainSwift
     - ObjcExceptionBridging
-    - Permission
     - PromiseKit
     - ReachabilitySwift
-    - ResearchKit
     - SwiftLint
     - XCGLogger
     - XLActionController
 
 EXTERNAL SOURCES:
+  DLLocalNotifications:
+    :path: "/Users/jona/projects/sandbox/DLLocalNotifications"
   Hakuba:
     :branch: Swift3
     :git: https://github.com/eskizyen/Hakuba.git
   ObjectMapper:
     :branch: master
     :git: https://github.com/Hearst-DD/ObjectMapper.git
+  Permission:
+    :path: "/Users/jona/projects/sandbox/Permission"
   PKHUD:
-    :git: https://github.com/pkluz/PKHUD.git
+    :path: "/Users/jona/projects/sandbox/PKHUD"
+  ResearchKit:
+    :commit: b50e1d7
+    :git: https://github.com/ResearchKit/ResearchKit.git
   SwiftValidator:
     :branch: master
     :git: https://github.com/jpotts18/SwiftValidator.git
@@ -103,38 +107,38 @@ CHECKOUT OPTIONS:
     :commit: 9d748747369671e162b4f088402eacbfa997121a
     :git: https://github.com/eskizyen/Hakuba.git
   ObjectMapper:
-    :commit: 19d499c65b8240f1220d7cf155ccd309857f8018
+    :commit: a593b4d647a970b3d184d046f8f52b945083ccf9
     :git: https://github.com/Hearst-DD/ObjectMapper.git
-  PKHUD:
-    :commit: 8fd26f23057c6bebd6695524b1c3e05e93aba571
-    :git: https://github.com/pkluz/PKHUD.git
+  ResearchKit:
+    :commit: b50e1d7
+    :git: https://github.com/ResearchKit/ResearchKit.git
   SwiftValidator:
     :commit: d370353b7a0ce758a53b189c81e485dcd53c99a4
     :git: https://github.com/jpotts18/SwiftValidator.git
 
 SPEC CHECKSUMS:
-  Alamofire: afc3e7c6db61476cb45cdd23fed06bad03bbc321
+  Alamofire: 85e8a02c69d6020a0d734f6054870d7ecb75cf18
   couchbase-lite-ios: 6b586fca2c8a59c85e31df89a2528c92c40fc4dc
   Crashlytics: 9220f5bc89e7a618df411b4f639389dbfb0e03d2
-  DLLocalNotifications: 92ee357278e90b0f2b2da1bb0e5a7e7fb179354e
+  DLLocalNotifications: 4c81c059c8a890b5a4bf79e5e4d4c8ff26e8500c
   EmitterKit: e7a27b37118823d8ad413b8396f75e40d59f8cba
-  Eureka: b88fb930e42c79f8c03c373d0fcdc28c1d6c50ed
+  Eureka: e6d720290c56bb23333ad1a0e020b2a98a0e9a43
   Fabric: ea977e3cd9c20425516d3dafd3bf8c941c51223f
   Hakuba: bc5a0422290d086c33a6424a26dd58c1a1136e94
   IDZSwiftCommonCrypto: 00dd37cdfbd149312a7e5a582cf9909f8b129f44
   KeychainSwift: be9554c0e5f4b1686c775930dc5c6bd9396992ed
   ObjcExceptionBridging: c30e00eb3700467e695faeea30e26e18bd445001
-  ObjectMapper: 078b564ed25c6578b62588e306bf1da3924636d4
+  ObjectMapper: 5a6c9f063ef67e7fc0d7eb8958919e3121396a96
   Permission: 4821359fb4d4367fb59aa16df38fbba5722ac842
   PKHUD: 026ee10894f7d983cdb585138523a2ae098e4424
-  PromiseKit: e4863d06976e7dee5e41c04fc7371c16b3600292
+  PromiseKit: 3b2b6995e51a954c46dbc550ce3da44fbfb563c5
   ReachabilitySwift: f5b9bb30a0777fac8f09ce8b067e32faeb29bb64
-  ResearchKit: a5770681dd61afddd3d1f24d232b9abf00cba454
-  SwiftLint: 4fa9579c63416865179bc416f0a92d55f009600d
+  ResearchKit: b948fcbadd4454d6b835d2b64471980a467a96a7
+  SwiftLint: 99f82d07b837b942dd563c668de129a03fc3fb52
   SwiftValidator: 249b6b3ae3b294266c5b9de134d94f18f2d5aa47
-  XCGLogger: 0434f15e3909cdc450bb63faf638b8792ab782ab
+  XCGLogger: 1943831ef907df55108b0b18657953f868de973b
   XLActionController: f1f2226d2c6629db197d4a41f2da907085a4cb9d
 
-PODFILE CHECKSUM: 9903792c109097de7e6990d33a6eed9d63d31136
+PODFILE CHECKSUM: 7e2ab9ca8abb4418fca530c9aecf2bb40836f5d1
 
-COCOAPODS: 1.10.0
+COCOAPODS: 1.10.1

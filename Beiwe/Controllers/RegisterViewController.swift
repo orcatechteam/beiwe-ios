@@ -39,27 +39,41 @@ class RegisterViewController: FormViewController {
         section = section <<< SVAccountRow("patientId") {
                 $0.title = "User ID:"
                 $0.placeholder = "User ID"
-                $0.rules = [RequiredRule(), FloatRule()]
+                $0.customRules = [RequiredRule(), FloatRule()]
                 $0.autoValidation = autoValidation
                 $0.value = "4"
             }
             <<< SVPasswordRow("tempPassword") {
                 $0.title = "Temporary Password:"
                 $0.placeholder = "Temp Password"
-                $0.rules = [RequiredRule()]
+                $0.customRules = [RequiredRule()]
                 $0.autoValidation = autoValidation
+                $0.value = "temporary"
             }
             <<< SVPasswordRow("password") {
                 $0.title = "New Password:"
                 $0.placeholder = "New password"
-                $0.rules = [RequiredRule(), RegexRule(regex: Constants.passwordRequirementRegex, message: Constants.passwordRequirementDescription)]
+                $0.customRules = [
+                    RequiredRule(),
+                    RegexRule(
+                            regex: Constants.passwordRequirementRegex,
+                            message: Constants.passwordRequirementDescription
+                    )
+                ]
                 $0.autoValidation = autoValidation
+                $0.value = "123456"
             }
             <<< SVPasswordRow("confirmPassword") {
                 $0.title = "Confirm Password:"
                 $0.placeholder = "Confirm Password"
-                $0.rules = [RequiredRule(), MinLengthRule(length: 1)]
+                $0.customRules = [RequiredRule(), MinLengthRule(length: 1)]
                 $0.autoValidation = autoValidation
+                $0.value = "123456"
+            }
+            <<< SVTextRow("doIt") {
+                $0.title = "Do it!"
+                $0.placeholder = "You can do it"
+                $0.value = "Yeah!"
             }
             <<< ButtonRow {
                 $0.title = "Register"
@@ -101,7 +115,7 @@ class RegisterViewController: FormViewController {
 
         let passwordRow: SVPasswordRow? = form.rowBy(tag: "password")
         let confirmRow: SVPasswordRow? = form.rowBy(tag: "confirmPassword")
-        confirmRow!.rules = [ConfirmationRule(confirmField: passwordRow!.cell.textField)]
+        confirmRow!.customRules = [ConfirmationRule(confirmField: passwordRow!.cell.textField)]
     }
 
     override func didReceiveMemoryWarning() {

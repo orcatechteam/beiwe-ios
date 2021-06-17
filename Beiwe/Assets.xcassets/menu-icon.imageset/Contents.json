@@ -1,15 +1,17 @@
 {
   "images" : [
     {
+      "filename" : "baseline_menu_black_24pt_1x.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ORCATECH Logo - No Text.png",
+      "filename" : "baseline_menu_black_24pt_2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "baseline_menu_black_24pt_3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

@@ -16,7 +16,12 @@ class OnboardingManager : NSObject, ORKTaskViewControllerDelegate {
 
     var WelcomeStep: ORKStep {
         let instructionStep = ORKInstructionStep(identifier: "WelcomeStep")
-        instructionStep.image = UIImage(named: "welcome-image")
+//        instructionStep.image = UIImage(named: "welcome-image")
+        let welcomeImg = UIImage(named: "orcatech-temp")
+//        instructionStep.image = welcomeImg
+        instructionStep.iconImage = welcomeImg
+        instructionStep.imageContentMode = .center
+        instructionStep.shouldTintImages = true
         instructionStep.title = Constants.onboardingTitle;
         instructionStep.text = Constants.onboardingText;
         return instructionStep;
@@ -24,6 +29,8 @@ class OnboardingManager : NSObject, ORKTaskViewControllerDelegate {
 
     override init() {
         super.init();
+//        ORKTopContentImageViewBackgroundColorKey = "xxx"
+
         var steps = [ORKStep]();
 
         steps += [WelcomeStep];
@@ -34,6 +41,8 @@ class OnboardingManager : NSObject, ORKTaskViewControllerDelegate {
         onboardingViewController.showsProgressInNavigationBar = false;
         onboardingViewController.delegate = self;
         retainSelf = self;
+
+//        UIView.appearance().backgroundColor = .yellow
     }
 
     func closeOnboarding() {

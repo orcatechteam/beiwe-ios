@@ -918,7 +918,7 @@ class StudyManager {
         }
 
         if isChangedLocationPerm {
-            log.info("StudyMgr.handleLocationPermStatus//changing location perm to: `\(study.studySettings?.gps)`")
+            log.info("StudyMgr.handleLocationPermStatus//changing location perm to: `\(String(describing: study.studySettings?.gps))`")
             Recline.shared.save(study).done { _ in
                 self.uploadSettings()
             }
@@ -933,8 +933,7 @@ class StudyManager {
                 identifier: "settingsUpdatedNotification",
                 alertTitle: "Beiwe Settings Updated",
                 alertBody: "The settings for the Beiwe app have been updated!",
-                date: triggerDate,
-                repeats: .none
+                date: triggerDate
         )
         let scheduler = DLNotificationScheduler()
         scheduler.scheduleNotification(notification: settingsUpdatedNotification)

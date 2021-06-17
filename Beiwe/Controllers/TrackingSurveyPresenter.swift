@@ -151,7 +151,7 @@ class TrackingSurveyPresenter : NSObject, ORKTaskViewControllerDelegate {
         //surveyViewController.showsProgressInNavigationBar = false;
 
         if let activeSurvey = activeSurvey, let restorationData = activeSurvey.rkAnswers {
-            surveyViewController = BWORKTaskViewController(task: task, restorationData: restorationData, delegate: self);
+            surveyViewController = BWORKTaskViewController(task: task!, restorationData: restorationData, delegate: self, error: nil);
         } else {
             surveyViewController = BWORKTaskViewController(task: task, taskRun: nil);
             surveyViewController!.delegate = self;

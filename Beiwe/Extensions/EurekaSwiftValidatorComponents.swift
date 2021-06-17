@@ -41,6 +41,10 @@ open class _SVFieldCell<T>: _FieldCell<T> where T: Equatable, T: InputTypeInitia
         super.init(coder: aDecoder)
     }
 
+//    required public init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+//        fatalError("init(style:reuseIdentifier:) has not been implemented")
+//    }
+
     lazy open var validationLabel: UILabel = {
         [unowned self] in
         let validationLabel = UILabel()
@@ -154,7 +158,7 @@ open class _SVFieldCell<T>: _FieldCell<T> where T: Equatable, T: InputTypeInitia
 public protocol SVRow {
     var errorColor: UIColor { get set }
 
-    var rules: [Rule]? { get set }
+    var customRules: [Rule]? { get set }
 
     var autoValidation: Bool { get set }
 
@@ -177,7 +181,7 @@ open class _SVTextRow<Cell: _SVFieldCell<String>>: FieldRow<Cell>, SVRow where C
         }
     }
 
-    open var rules: [Rule]? {
+    open var customRules: [Rule]? {
         get {
             return self.cell.rules
         }
@@ -415,3 +419,4 @@ public final class SVZipCodeRow: _SVTextRow<SVZipCodeCell>, RowType {
 }
 
 // TODO add more
+

@@ -14,5 +14,5 @@ struct Constants {
     static let apiUrl = "https://beiwe.internal.orcatech.org:8080"
     
     static let onboardingTitle = "Welcome";
-    static let onboardingText = "Welcome to the Beiwe Research Platform. Please have your user ID and password, which were given to you by your clinician, available as you begin the registration process.";
+    static let onboardingText = "Welcome to the ORCATECH Mobile Research Tool. Please have your user ID and password, which were given to you by your clinician, available as you begin the registration process. Have a nice day!";
 }

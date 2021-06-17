@@ -2,16 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIAppFonts</key>
-	<array>
-		<string>SF-Pro-Text-Regular</string>
-		<string>SF-Pro-Text-Bold</string>
-		<string>SF-Pro-Text-Semibold</string>
-		<string>SF-Pro-Display-Medium</string>
-		<string>SF-Pro-Display-Semibold</string>
-	</array>
-	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
-	<string>Beiwe needs your medical records to conduct medical research</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
@@ -55,6 +45,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>For medical research with ResearchKit</string>
+	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
+	<string>Beiwe needs your medical records to conduct medical research</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>For medical research with ResearchKit</string>
 	<key>NSHealthUpdateUsageDescription</key>
@@ -62,15 +54,23 @@
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Beiwe needs your location at all times to properly conduct medical research.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Beiwe needs your location to properly conduct medical research.</string>
+	<string>Beiwe needs your location to properly conduct medical research X.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Beiwe needs your location to properly conduct medical research.</string>
+	<string>Beiwe needs your location to properly conduct medical research Y.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Record audio survey questions</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Beiwe needs access to your sensors to properly conduct medical research.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>For medical research</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>SF-Pro-Text-Regular</string>
+		<string>SF-Pro-Text-Bold</string>
+		<string>SF-Pro-Text-Semibold</string>
+		<string>SF-Pro-Display-Medium</string>
+		<string>SF-Pro-Display-Semibold</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
@@ -92,5 +92,10 @@
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+			<true/>
+	</dict>
 </dict>
 </plist>
