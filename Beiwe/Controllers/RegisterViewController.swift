@@ -41,14 +41,12 @@ class RegisterViewController: FormViewController {
                 $0.placeholder = "User ID"
                 $0.customRules = [RequiredRule(), FloatRule()]
                 $0.autoValidation = autoValidation
-                $0.value = "4"
             }
             <<< SVPasswordRow("tempPassword") {
                 $0.title = "Temporary Password:"
                 $0.placeholder = "Temp Password"
                 $0.customRules = [RequiredRule()]
                 $0.autoValidation = autoValidation
-                $0.value = "temporary"
             }
             <<< SVPasswordRow("password") {
                 $0.title = "New Password:"
@@ -61,7 +59,6 @@ class RegisterViewController: FormViewController {
                     )
                 ]
                 $0.autoValidation = autoValidation
-                $0.value = "123456"
             }
             <<< SVPasswordRow("confirmPassword") {
                 $0.title = "Confirm Password:"
@@ -69,11 +66,6 @@ class RegisterViewController: FormViewController {
                 $0.customRules = [RequiredRule(), MinLengthRule(length: 1)]
                 $0.autoValidation = autoValidation
                 $0.value = "123456"
-            }
-            <<< SVTextRow("doIt") {
-                $0.title = "Do it!"
-                $0.placeholder = "You can do it"
-                $0.value = "Yeah!"
             }
             <<< ButtonRow {
                 $0.title = "Register"
