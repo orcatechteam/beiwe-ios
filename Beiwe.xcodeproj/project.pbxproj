@@ -130,6 +130,7 @@
 		995B69B82345BF6D00BD96B1 /* Nonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = 995B69B72345BF6D00BD96B1 /* Nonce.swift */; };
 		FC8CBFC6266983E40010DB43 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC8CBFC5266983E40010DB43 /* LoginView.swift */; };
 		FC93A2C32672D51C003C2543 /* LoginViewV2Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC93A2C22672D51C003C2543 /* LoginViewV2Controller.swift */; };
+		FCF7B958268E8E1C00FE5349 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF7B957268E8E1C00FE5349 /* LoginView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -213,7 +214,7 @@
 		83E3DE8D1CA477D200EB5349 /* ApiManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApiManager.swift; sourceTree = "<group>"; };
 		83F6C9671CA0F6CF00B85914 /* PersistentPasswordManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PersistentPasswordManager.swift; sourceTree = "<group>"; };
 		83F6C9691CA0F6D900B85914 /* PersistentAppUUID.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PersistentAppUUID.swift; sourceTree = "<group>"; };
-		83F98C361C923C3600E0B64B /* BeiweDbg.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BeiweDbg.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		83F98C361C923C3600E0B64B /* ORCATECH Mobile Research ToolDbg.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ORCATECH Mobile Research ToolDbg.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		83F98C391C923C3600E0B64B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		83F98C3E1C923C3600E0B64B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		83F98C431C923C3600E0B64B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -277,6 +278,7 @@
 		F55227716C367CC01CFDCA3C /* Pods-Beiwe.cart.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Beiwe.cart.xcconfig"; path = "Target Support Files/Pods-Beiwe/Pods-Beiwe.cart.xcconfig"; sourceTree = "<group>"; };
 		FC8CBFC5266983E40010DB43 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		FC93A2C22672D51C003C2543 /* LoginViewV2Controller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewV2Controller.swift; sourceTree = "<group>"; };
+		FCF7B957268E8E1C00FE5349 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -357,6 +359,7 @@
 				832FFC2C1CC889DB00F2E1EF /* SurveyCell.swift */,
 				83914CAC1D00DA1100B01C82 /* ForgotPasswordHeaderView.swift */,
 				83914CAE1D00DA4600B01C82 /* ForgotPasswordHeaderView.xib */,
+				FCF7B957268E8E1C00FE5349 /* LoginView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -485,7 +488,7 @@
 		83F98C371C923C3600E0B64B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				83F98C361C923C3600E0B64B /* BeiweDbg.app */,
+				83F98C361C923C3600E0B64B /* ORCATECH Mobile Research ToolDbg.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -573,9 +576,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		83F98C351C923C3600E0B64B /* Beiwe */ = {
+		83F98C351C923C3600E0B64B /* ORCATECH Mobile Research Tool */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 83F98C481C923C3600E0B64B /* Build configuration list for PBXNativeTarget "Beiwe" */;
+			buildConfigurationList = 83F98C481C923C3600E0B64B /* Build configuration list for PBXNativeTarget "ORCATECH Mobile Research Tool" */;
 			buildPhases = (
 				641F665F3F657CFF946ADB4B /* [CP] Check Pods Manifest.lock */,
 				83F98C321C923C3600E0B64B /* Sources */,
@@ -591,9 +594,9 @@
 			);
 			dependencies = (
 			);
-			name = Beiwe;
+			name = "ORCATECH Mobile Research Tool";
 			productName = Beiwe;
-			productReference = 83F98C361C923C3600E0B64B /* BeiweDbg.app */;
+			productReference = 83F98C361C923C3600E0B64B /* ORCATECH Mobile Research ToolDbg.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -608,7 +611,7 @@
 				TargetAttributes = {
 					83F98C351C923C3600E0B64B = {
 						CreatedOnToolsVersion = 7.2;
-						DevelopmentTeam = GDN6475SX9;
+						DevelopmentTeam = ZA685R3CWP;
 						LastSwiftMigration = 0830;
 						ProvisioningStyle = Automatic;
 					};
@@ -627,7 +630,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				83F98C351C923C3600E0B64B /* Beiwe */,
+				83F98C351C923C3600E0B64B /* ORCATECH Mobile Research Tool */,
 			);
 		};
 /* End PBXProject section */
@@ -856,6 +859,7 @@
 				83AF20DA1CA310B100D3DF02 /* EurekaSwiftValidatorComponents.swift in Sources */,
 				831CC5801F79AF6400CDEFB0 /* AppEventManager.swift in Sources */,
 				83B4D6721CA8DBB2001BF283 /* Study.swift in Sources */,
+				FCF7B958268E8E1C00FE5349 /* LoginView.swift in Sources */,
 				833482F71CA2EF7E00A37B35 /* RegisterViewController.swift in Sources */,
 				83C7D3891CB5F43400BC7285 /* TaskListViewController.swift in Sources */,
 				83914CAD1D00DA1100B01C82 /* ForgotPasswordHeaderView.swift in Sources */,
@@ -989,14 +993,15 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = GDN6475SX9;
+				DEVELOPMENT_TEAM = ZA685R3CWP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Beiwe/Info.plist;
 				INFOPLIST_PREPROCESS = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0.0;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = orcatech.beiwe.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.ohsu.orcatech.mrt;
 				PRODUCT_NAME = "$(TARGET_NAME)${TARGET_NAME_SUFFIX}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Beiwe-Bridging-Header.h";
@@ -1127,14 +1132,15 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = GDN6475SX9;
+				DEVELOPMENT_TEAM = ZA685R3CWP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Beiwe/Info.plist;
 				INFOPLIST_PREPROCESS = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0.0;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = orcatech.beiwe.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.ohsu.orcatech.mrt;
 				PRODUCT_NAME = "$(TARGET_NAME)${TARGET_NAME_SUFFIX}";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1156,13 +1162,14 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = GDN6475SX9;
+				DEVELOPMENT_TEAM = ZA685R3CWP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Beiwe/Info.plist;
 				INFOPLIST_PREPROCESS = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = harvard.lab.onnela.beiwe.ios;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.ohsu.orcatech.mrt;
 				PRODUCT_NAME = "$(TARGET_NAME)${TARGET_NAME_SUFFIX}";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1240,14 +1247,15 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = GDN6475SX9;
+				DEVELOPMENT_TEAM = ZA685R3CWP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Beiwe/Info.plist;
 				INFOPLIST_PREPROCESS = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0.0;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = orcatech.beiwe.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.ohsu.orcatech.mrt;
 				PRODUCT_NAME = "$(TARGET_NAME)${TARGET_NAME_SUFFIX}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Beiwe-Bridging-Header.h";
@@ -1324,14 +1332,15 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = GDN6475SX9;
+				DEVELOPMENT_TEAM = ZA685R3CWP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Beiwe/Info.plist;
 				INFOPLIST_PREPROCESS = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0.0;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = orcatech.beiwe.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.ohsu.orcatech.mrt;
 				PRODUCT_NAME = "$(TARGET_NAME)${TARGET_NAME_SUFFIX}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Beiwe-Bridging-Header.h";
@@ -1403,13 +1412,14 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = GDN6475SX9;
+				DEVELOPMENT_TEAM = ZA685R3CWP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Beiwe/Info.plist;
 				INFOPLIST_PREPROCESS = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = orcatech.beiwe.ios;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.ohsu.orcatech.mrt;
 				PRODUCT_NAME = Beiwe2;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1483,14 +1493,15 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = GDN6475SX9;
+				DEVELOPMENT_TEAM = ZA685R3CWP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Beiwe/Info.plist;
 				INFOPLIST_PREPROCESS = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0.0;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = orcatech.beiwe.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.ohsu.orcatech.mrt;
 				PRODUCT_NAME = "$(TARGET_NAME)${TARGET_NAME_SUFFIX}";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1519,7 +1530,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Cart;
 		};
-		83F98C481C923C3600E0B64B /* Build configuration list for PBXNativeTarget "Beiwe" */ = {
+		83F98C481C923C3600E0B64B /* Build configuration list for PBXNativeTarget "ORCATECH Mobile Research Tool" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83F98C491C923C3600E0B64B /* Debug */,

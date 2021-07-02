@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "83F98C351C923C3600E0B64B"
-               BuildableName = "Beiwe.app"
-               BlueprintName = "Beiwe"
+               BuildableName = "ORCATECH Mobile Research Tool.app"
+               BlueprintName = "ORCATECH Mobile Research Tool"
                ReferencedContainer = "container:Beiwe.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -31,8 +31,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "83F98C351C923C3600E0B64B"
-            BuildableName = "Beiwe.app"
-            BlueprintName = "Beiwe"
+            BuildableName = "ORCATECH Mobile Research Tool.app"
+            BlueprintName = "ORCATECH Mobile Research Tool"
             ReferencedContainer = "container:Beiwe.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -54,8 +54,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "83F98C351C923C3600E0B64B"
-            BuildableName = "Beiwe.app"
-            BlueprintName = "Beiwe"
+            BuildableName = "ORCATECH Mobile Research Tool.app"
+            BlueprintName = "ORCATECH Mobile Research Tool"
             ReferencedContainer = "container:Beiwe.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -71,8 +71,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "83F98C351C923C3600E0B64B"
-            BuildableName = "Beiwe.app"
-            BlueprintName = "Beiwe"
+            BuildableName = "ORCATECH Mobile Research Tool.app"
+            BlueprintName = "ORCATECH Mobile Research Tool"
             ReferencedContainer = "container:Beiwe.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

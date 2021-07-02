@@ -51,12 +51,12 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
         if gpsNeeded {
             instructionStep.title = "Location & Notification Permissions"
             instructionStep.text = """
-                Beiwe needs access to your location for the passive data gathering capabilities of this app. 
-                Beiwe will also send you notifications to notify you of new surveys.
+                ORCATECH Mobile Research Tool needs access to your location for the passive data gathering capabilities of this app.
+                ORCATECH Mobile Research Tool will also send you notifications to notify you of new surveys.
                 """
         } else {
             instructionStep.title = "Notification Permission"
-            instructionStep.text = "Beiwe needs permission to send you notifications to notify you of new surveys or updates."
+            instructionStep.text = "ORCATECH Mobile Research Tool needs permission to send you notifications to notify you of new surveys or updates."
         }
         return instructionStep
     }
@@ -75,7 +75,7 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
         let instructionStep = ORKInstructionStep(identifier: StepIds.AdditionalPermissionsInstruction.rawValue)
         instructionStep.title = "Permission Request"
         instructionStep.text = """
-           Beiwe needs access to the device sensor data. The following screens will request permission to access your data.
+           ORCATECH Mobile Research Tool needs access to the device sensor data. The following screens will request permission to access your data.
            """
         return instructionStep
     }
@@ -96,9 +96,9 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
             .reachability: studySettings?.reachability,
         ]
         let questions: [PermKey: String] = [
-            .motion: "Allow Beiwe to access the device motion information?",
-            .power: "Allow Beiwe to access the device power information?",
-            .reachability: "Allow Beiwe to know whether the device is connected to the Internet?",
+            .motion: "Allow ORCATECH Mobile Research Tool to access the device motion information?",
+            .power: "Allow ORCATECH Mobile Research Tool to access the device power information?",
+            .reachability: "Allow ORCATECH Mobile Research Tool to know whether the device is connected to the Internet?",
         ]
 
         additionalPerms.forEach{ permKey, studyPerm in
@@ -138,7 +138,7 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
         }
 
         consentDocument = ORKConsentDocument()
-        consentDocument.title = "Beiwe Consent"
+        consentDocument.title = "ORCATECH Mobile Research Tool Consent"
 
         let studyConsentSections = StudyManager.sharedInstance.currentStudy?.studySettings?.consentSections ?? [:]
 
