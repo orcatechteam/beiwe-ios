@@ -36,9 +36,10 @@ class ChangePasswordViewController: FormViewController {
                 header.onSetupView = { headerView, _ in
                     headerView.patientId.text = StudyManager.sharedInstance.currentStudy?.patientId ?? ""
                     headerView.callButton.addTarget(self, action: #selector(ChangePasswordViewController.callAssistant(_:)), for: UIControl.Event.touchUpInside)
+                    headerView.callButton.isHidden = true
                     // Hide call button if it's disabled in the study settings
                     if !(StudyManager.sharedInstance.currentStudy?.studySettings?.callResearchAssistantButtonEnabled)! {
-                        headerView.descriptionLabel.text = "Please contact your study's staff and provide them with your Patient ID so they can give you a temporary password."
+                        headerView.descriptionLabel.text = "Please contact your study's staff and provide them with your user ID so they can give you a temporary password."
                         headerView.callButton.isHidden = true
                     }
                 }
@@ -78,8 +79,9 @@ class ChangePasswordViewController: FormViewController {
                         let formValues = self.form.values();
                         let newPassword: String? = formValues["password"] as! String?;
                         let currentPassword: String? = formValues["currentPassword"] as! String?;
+                        let pwMode = self.isForgotPassword ? "forgot" : "reset";
                         if let newPassword = newPassword, let currentPassword = currentPassword {
-                            let changePasswordRequest = ChangePasswordRequest(newPassword: newPassword);
+                            let changePasswordRequest = ChangePasswordRequest(newPassword: newPassword, pwMode: pwMode);
                             ApiManager.sharedInstance.makePostRequest(changePasswordRequest, password: currentPassword).done {(body, code) -> Void in
                                 log.info("Password changed");
                                 PersistentPasswordManager.sharedInstance.storePassword(newPassword);

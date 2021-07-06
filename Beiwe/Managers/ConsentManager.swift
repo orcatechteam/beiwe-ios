@@ -56,7 +56,7 @@ class WaitForPermissionsRule: ORKStepNavigationRule {
                 """
         } else {
             instructionStep.title = "Notification Permission"
-            instructionStep.text = "ORCATECH Mobile Research Tool needs permission to send you notifications to notify you of new surveys or updates."
+            instructionStep.text = "ORCATECH Mobile Research Tool needs permission to send you notifications to notify you of updates."
         }
         return instructionStep
     }

@@ -15,10 +15,13 @@ struct ChangePasswordRequest : Mappable, ApiRequest {
     typealias ApiReturnType = BodyResponse;
 
     var newPassword: String?;
+    var pwMode: String?;
+    
 
 
-    init(newPassword: String) {
+    init(newPassword: String, pwMode: String) {
         self.newPassword = newPassword;
+        self.pwMode = pwMode;
     }
 
     init?(map: Map) {
@@ -28,6 +31,7 @@ struct ChangePasswordRequest : Mappable, ApiRequest {
     // Mappable
     mutating func mapping(map: Map) {
         newPassword <- map["new_password"];
+        pwMode <- map["pw_mode"];
     }
     
 }

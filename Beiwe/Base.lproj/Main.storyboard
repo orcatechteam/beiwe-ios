@@ -11,7 +11,7 @@
         <!--Register View Controller-->
         <scene sceneID="L6c-xs-Z07">
             <objects>
-                <viewController storyboardIdentifier="registerView" id="zFg-Wf-eF7" userLabel="Register View Controller" customClass="RegisterViewController" customModule="Beiwe" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="registerView" id="zFg-Wf-eF7" userLabel="Register View Controller" customClass="RegisterViewController" customModule="Beiwe2" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="AS8-Ge-F2y"/>
                         <viewControllerLayoutGuide type="bottom" id="fnO-hO-VFt"/>
@@ -48,12 +48,12 @@
         <!--Login View Controller-->
         <scene sceneID="RmD-UF-ejn">
             <objects>
-                <viewController id="qWM-9N-RLc" userLabel="Login View Controller" customClass="LoginViewController" customModule="Beiwe" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="qWM-9N-RLc" userLabel="Login View Controller" customClass="LoginViewController" customModule="Beiwe2" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Xz7-TR-GrZ"/>
                         <viewControllerLayoutGuide type="bottom" id="Xty-FT-nNE"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="Ro1-69-USY" customClass="GradientView" customModule="Beiwe" customModuleProvider="target">
+                    <view key="view" contentMode="scaleToFill" id="Ro1-69-USY" customClass="GradientView" customModule="Beiwe2" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -71,7 +71,7 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" returnKeyType="go" secureTextEntry="YES"/>
                             </textField>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Pqy-gE-5gW" customClass="BWButton" customModule="Beiwe" customModuleProvider="target">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Pqy-gE-5gW" customClass="BWButton" customModule="Beiwe2" customModuleProvider="target">
                                 <rect key="frame" x="148.66666666666666" y="746" width="116.99999999999997" height="30"/>
                                 <state key="normal" title="Contact Clinician">
                                     <color key="titleColor" red="0.98823529409999999" green="1" blue="0.96078431369999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -80,7 +80,7 @@
                                     <action selector="callClinician:" destination="qWM-9N-RLc" eventType="touchUpInside" id="uIW-xh-qrv"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ysc-6U-fpb" customClass="BWButton" customModule="Beiwe" customModuleProvider="target">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ysc-6U-fpb" customClass="BWButton" customModule="Beiwe2" customModuleProvider="target">
                                 <rect key="frame" x="149.66666666666666" y="698" width="114.99999999999997" height="30"/>
                                 <state key="normal" title="Forgot Password">
                                     <color key="titleColor" red="0.98823529409999999" green="1" blue="0.96078431369999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -89,7 +89,7 @@
                                     <action selector="forgotPassword:" destination="qWM-9N-RLc" eventType="touchUpInside" id="lMa-k6-rKd"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fjW-53-3Zu" customClass="BWButton" customModule="Beiwe" customModuleProvider="target">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fjW-53-3Zu" customClass="BWButton" customModule="Beiwe2" customModuleProvider="target">
                                 <rect key="frame" x="20" y="240" width="38" height="30"/>
                                 <state key="normal" title="Login">
                                     <color key="titleColor" red="0.98823529409999999" green="1" blue="0.96078431369999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -141,7 +141,7 @@
         <!--Login 2 your study-->
         <scene sceneID="o3x-iV-bwL">
             <objects>
-                <viewController id="X03-Eb-hFr" customClass="LoginViewV2Controller" customModule="Beiwe" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="X03-Eb-hFr" customClass="LoginViewV2Controller" customModule="Beiwe2" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Mkt-Ly-vw0"/>
                         <viewControllerLayoutGuide type="bottom" id="zkl-ML-9KF"/>
@@ -169,12 +169,12 @@
         <!--Main Study ViewController-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" userLabel="Main Study ViewController" customClass="MainViewController" customModule="Beiwe" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" userLabel="Main Study ViewController" customClass="MainViewController" customModule="Beiwe2" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC" customClass="GradientView" customModule="Beiwe" customModuleProvider="target">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC" customClass="GradientView" customModule="Beiwe2" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="808"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -225,7 +225,7 @@
                                                 <constraint firstAttribute="height" constant="1" id="SVT-Wf-4sm"/>
                                             </constraints>
                                         </view>
-                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2Mg-Ad-WGs" customClass="BWButton" customModule="Beiwe" customModuleProvider="target">
+                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2Mg-Ad-WGs" customClass="BWButton" customModule="Beiwe2" customModuleProvider="target">
                                             <rect key="frame" x="158.66666666666666" y="38" width="97" height="33"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                             <state key="normal" title="Call Clinician">
@@ -253,7 +253,7 @@
                                     </constraints>
                                 </view>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="blue" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="SurveyCell" id="Ch3-JX-o9i" customClass="SurveyCell" customModule="Beiwe" customModuleProvider="target">
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="blue" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="SurveyCell" id="Ch3-JX-o9i" customClass="SurveyCell" customModule="Beiwe2" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="66.333333969116211" width="414" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="Ch3-JX-o9i" id="nkM-In-taj">
@@ -396,12 +396,12 @@
         <!--Audio Question View Controller-->
         <scene sceneID="miG-Td-9qQ">
             <objects>
-                <viewController title="Audio Question" automaticallyAdjustsScrollViewInsets="NO" id="3pR-tX-e0X" userLabel="Audio Question View Controller" customClass="AudioQuestionViewController" customModule="Beiwe" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Audio Question" automaticallyAdjustsScrollViewInsets="NO" id="3pR-tX-e0X" userLabel="Audio Question View Controller" customClass="AudioQuestionViewController" customModule="Beiwe2" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="FNf-0e-voQ"/>
                         <viewControllerLayoutGuide type="bottom" id="Ie1-Cu-aMs"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="67n-ia-977" customClass="GradientView" customModule="Beiwe" customModuleProvider="target">
+                    <view key="view" contentMode="scaleToFill" id="67n-ia-977" customClass="GradientView" customModule="Beiwe2" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="808"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -434,7 +434,7 @@
                                     <constraint firstAttribute="bottom" secondItem="X9w-t7-T74" secondAttribute="bottom" id="x2E-dh-g7W"/>
                                 </constraints>
                             </scrollView>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="o2C-Hl-U4C" customClass="BWButton" customModule="Beiwe" customModuleProvider="target">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="o2C-Hl-U4C" customClass="BWButton" customModule="Beiwe2" customModuleProvider="target">
                                 <rect key="frame" x="178" y="581" width="58" height="34"/>
                                 <color key="tintColor" red="0.023529412224888802" green="0.19607843458652496" blue="0.19215686619281769" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <state key="normal" title="Record"/>
@@ -442,7 +442,7 @@
                                     <action selector="recordCancelPressed:" destination="3pR-tX-e0X" eventType="touchUpInside" id="v7K-3V-iTT"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5aN-yy-cIR" customClass="BWButton" customModule="Beiwe" customModuleProvider="target">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5aN-yy-cIR" customClass="BWButton" customModule="Beiwe2" customModuleProvider="target">
                                 <rect key="frame" x="91.666666666666686" y="666" width="77" height="34"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="18"/>
                                 <state key="normal" title="Save"/>
@@ -456,7 +456,7 @@
                                 <color key="textColor" red="0.98823529409999999" green="1" blue="0.96078431369999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hCR-ge-r03" customClass="BWButton" customModule="Beiwe" customModuleProvider="target">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hCR-ge-r03" customClass="BWButton" customModule="Beiwe2" customModuleProvider="target">
                                 <rect key="frame" x="245.66666666666663" y="666" width="77" height="34"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="18"/>
                                 <state key="normal" title="re-record"/>
