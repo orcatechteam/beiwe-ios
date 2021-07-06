@@ -81,7 +81,11 @@ class ChangePasswordViewController: FormViewController {
                         let currentPassword: String? = formValues["currentPassword"] as! String?;
                         let pwMode = self.isForgotPassword ? "forgot" : "reset";
                         if let newPassword = newPassword, let currentPassword = currentPassword {
-                            let changePasswordRequest = ChangePasswordRequest(newPassword: newPassword, pwMode: pwMode);
+                            let newBase64Password = Crypto.sharedInstance.sha256Base64URL(newPassword)
+                            let changePasswordRequest = ChangePasswordRequest(
+                                newPassword: newBase64Password,
+                                pwMode: pwMode
+                            );
                             ApiManager.sharedInstance.makePostRequest(changePasswordRequest, password: currentPassword).done {(body, code) -> Void in
                                 log.info("Password changed");
                                 PersistentPasswordManager.sharedInstance.storePassword(newPassword);
